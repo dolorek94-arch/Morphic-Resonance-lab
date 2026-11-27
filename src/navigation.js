@@ -27,10 +27,11 @@ function resolveBox(p,b){
  const sides=[{d:p.x-b.minX,x:b.minX-r,z:p.z},{d:b.maxX-p.x,x:b.maxX+r,z:p.z},{d:p.z-b.minZ,x:p.x,z:b.minZ-r},{d:b.maxZ-p.z,x:p.x,z:b.maxZ+r}];
  sides.sort((a,b)=>a.d-b.d);p.x=sides[0].x;p.z=sides[0].z;
 }
-export function move(position,velocity,dt,colliders,terrainHeight=height){
+export function move(position,velocity,dt,colliders,terrainHeight=height,canStep){
  const steps=Math.max(1,Math.ceil(Math.hypot(velocity.x,velocity.z)*dt/.1));
  for(let j=0;j<steps;j++){
-  position.x+=velocity.x*dt/steps;position.z+=velocity.z*dt/steps;
+  const next={x:position.x+velocity.x*dt/steps,z:position.z+velocity.z*dt/steps};
+  if(!canStep||canStep(position,next))Object.assign(position,next);
   for(let pass=0;pass<4;pass++)for(const c of colliders){
    const feet=terrainHeight(position.x,position.z);
    if(c.maxY<feet+.15||c.minY>feet+CONFIG.eyeHeight+.25)continue;
@@ -41,4 +42,3 @@ export function move(position,velocity,dt,colliders,terrainHeight=height){
  }
  return position;
 }
-

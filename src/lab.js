@@ -1,0 +1,65 @@
+import {implicitVertex} from './rendering/shaders.js';
+import {labFragment} from './rendering/lab-shader.js';
+import {labFloorFragment} from './rendering/lab-floor.js';
+import {LAB_HALF_BOUNDS,LAB_LIGHTING} from './lab-lighting-config.js';
+import {LAB_MATERIALS,updateLabState,resetLabState} from './lab-state.js';
+import {createNeckGeometry,updateNeckGeometry,bodyVolumeScale} from './neck-geometry.js';
+import {createTransport} from './transport.js';
+export function createLab(T,scene,r,shared,camera,{offsets=[[0,0],[0,0],[0,0]],cavern=false}={}){
+ scene.background=new T.Color(0x17212a);
+ scene.fog=new T.FogExp2(0x17212a,.025);
+ const center=new T.Vector3(0,1.9,-7);
+ const living=[-2.8,0,2.8].map((x,i)=>{
+  const [y,z]=offsets[i];
+  const mesh=new T.Object3D();mesh.position.copy(center).add(new T.Vector3(x,y,z));
+  mesh.userData={radius:1.25,halfHeight:1.7};
+  return {mesh,base:mesh.position.clone(),offsetY:y,offsetZ:z,phase:0,e:0,v:0,memory:0,activity:0,...LAB_MATERIALS[i]};
+ });
+ const bonds=[{a:living[0],b:living[1],i:0,j:1,d:2.8,coupling:8},{a:living[1],b:living[2],i:1,j:2,d:2.8,coupling:8}];
+ for(const b of bonds)b.mesh=new T.Object3D();
+ resetLabState(living,bonds);
+ const transport=createTransport(living,bonds);
+ // Collision covers the maximum joining envelope, including space between bodies.
+ const colliders=[{type:'box',minX:-4.25,maxX:4.25,minZ:-8.5,maxZ:-5.5,minY:.1,maxY:4.7}];
+ const necks=createNeckGeometry();
+ const bounds=cavern?[4.8,3.65,2.7]:LAB_HALF_BOUNDS;
+ const uniforms={
+  clock:shared.clock,center:{value:center},projectionMatrix:{value:camera.projectionMatrix},
+  displacement:{value:new T.Vector3()},memory:{value:new T.Vector3()},
+  activity:{value:new T.Vector3()},bodyScale:{value:new T.Vector3()},recoil:{value:new T.Vector3()},
+  offsetY:{value:new T.Vector3(...offsets.map(offset=>offset[0]))},
+  offsetZ:{value:new T.Vector3(...offsets.map(offset=>offset[1]))},
+  setLeft:{value:new T.Vector3()},setRight:{value:new T.Vector3()},neckStart:{value:necks.start},neckEnd:{value:necks.end},glow:{value:0},
+  halfBounds:{value:new T.Vector3().fromArray(bounds)},
+  lightDirection:{value:new T.Vector3().fromArray(LAB_LIGHTING.direction).normalize()},
+  keyTint:{value:new T.Vector3().fromArray(LAB_LIGHTING.keyTint)},
+  skyTint:{value:new T.Vector3().fromArray(LAB_LIGHTING.skyTint)},
+  shadowEnabled:{value:1},shadowSoftness:{value:LAB_LIGHTING.shadowSoftness},shadowBias:{value:LAB_LIGHTING.shadowBias}
+ };
+ const style=cavern?{GROTTO:1}:{};
+ const material=new T.ShaderMaterial({defines:{...style,STEPS:96,SHADOW_STEPS:LAB_LIGHTING.surfaceSteps},uniforms,side:T.BackSide,vertexShader:implicitVertex,fragmentShader:labFragment});
+ const proxy=new T.Mesh(new T.BoxGeometry(...bounds.map(v=>v*2)),material);proxy.position.copy(center);scene.add(proxy);
+ const floorMaterial=new T.ShaderMaterial({defines:{...style,SHADOW_STEPS:LAB_LIGHTING.floorSteps},uniforms,vertexShader:implicitVertex,fragmentShader:labFloorFragment});
+ const floor=new T.Mesh(new T.PlaneGeometry(36,36),floorMaterial);
+ floor.rotation.x=-Math.PI/2;scene.add(floor);
+ const motes=new T.Object3D();
+ return {
+  living,bonds,motes,implicitUniforms:[],colliders,targeted:true,groundHeight:()=>0,
+  integrate:transport.integrate,
+  reset(){resetLabState(living,bonds);transport.reset();},
+  update(dt=0,glow=false,shadows=true,held=false){
+   updateLabState(living,bonds,dt,held);
+   updateNeckGeometry(necks,living,bonds,{held});
+   uniforms.displacement.value.set(...living.map(n=>Math.tanh(n.e)));
+   uniforms.memory.value.set(...living.map(n=>n.memory));
+   uniforms.activity.value.set(...living.map(n=>n.activity));
+   uniforms.bodyScale.value.set(...living.map((_,i)=>bodyVolumeScale(necks,i)));
+   uniforms.recoil.value.set(...living.map(n=>n.recoil));
+   uniforms.setLeft.value.set(...living.map(n=>n.setLeft));
+   uniforms.setRight.value.set(...living.map(n=>n.setRight));
+   uniforms.glow.value=glow?1:0;
+   uniforms.shadowEnabled.value=shadows?1:0;
+  }
+ };
+}
+

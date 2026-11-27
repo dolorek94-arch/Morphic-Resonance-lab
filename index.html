@@ -1,42 +1,41 @@
-<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><title>Morphic Environment 0.6</title><style>*{box-sizing:border-box}body{margin:0;background:#101b22;color:#d8e8e2;font:14px system-ui}#view{height:65dvh;position:relative;overflow:hidden}canvas{display:block;touch-action:none}#status{position:absolute;top:12px;left:12px;pointer-events:none}#stick{position:absolute;bottom:20px;left:20px;width:112px;height:112px;border:1px solid #a9d5c477;border-radius:50%;background:#142b3380;touch-action:none}#knob{position:absolute;left:36px;top:36px;width:40px;height:40px;background:#a9d5c4aa;border-radius:50%;pointer-events:none}section{padding:12px}button{background:#315e54;color:white;border:0;border-radius:8px;padding:12px}input{width:100%;accent-color:#79bba5}a{color:#9ed4c4}</style><div id="view"><div id="status">Lade Umgebung…</div><div id="stick"><div id="knob"></div></div></div><section><b>MORPHIC ENVIRONMENT / 0.6</b><p>Joystick: laufen · Bild ziehen: umsehen</p><button id="pulse">Resonanzimpuls</button> <button id="quality">Qualität: Mobil</button> <button id="reset">Startpunkt</button><p>Resonanzstärke <input id="amp" type="range" min="0" max="2" step=".1" value="1"></p><a href="v05.html">Version 0.5</a> · <a href="v04.html">Version 0.4</a> · <a href="v02.html">Version 0.2</a> · <a href="v01.html">Version 0.1</a></section><script type="module">
-try{
-const T=await import('https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js'),$=id=>document.getElementById(id),view=$('view'),r=new T.WebGLRenderer({antialias:false});view.prepend(r.domElement);const scene=new T.Scene();scene.background=new T.Color(0x263b50);scene.fog=new T.FogExp2(0x263b50,.047);const camera=new T.PerspectiveCamera(70,1,.1,100);let x=0,z=7,yaw=0,pitch=-.08,t=0,high=false,joyX=0,joyY=0,imp=-100;
-const shared={clock:{value:0},origin:{value:new T.Vector2()},age:{value:100},strength:{value:1}};
-function height(x,z){return 1.6*Math.sin(x*.19)*Math.cos(z*.17)+.65*Math.sin(x*.43+z*.28)+.18*Math.cos(z*.9-x*.6)}
-function material(color,kind){const m=new T.MeshStandardMaterial({color,roughness:.85,flatShading:true});m.onBeforeCompile=s=>{Object.assign(s.uniforms,shared);s.vertexShader='uniform float clock,age,strength; uniform vec2 origin; varying vec3 wp; varying float wave;\n'+s.vertexShader;s.vertexShader=s.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
-vec3 w=(modelMatrix*vec4(position,1.)).xyz;float d=length(w.xz-origin);float front=d-age*7.;wave=sin(front*3.)*exp(-front*front*.14)*exp(-age*.12)*strength;transformed+=normal*wave*${kind===0?'.13':'.25'};wp=w;`);s.fragmentShader='varying vec3 wp; varying float wave; uniform float clock;\n'+s.fragmentShader;s.fragmentShader=s.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
-float pattern=sin(wp.x*3.1+sin(wp.z*2.4)+wp.y*2.)*sin(wp.z*3.3-wp.y*1.7);diffuseColor.rgb*=.68+.32*pattern;`);s.fragmentShader=s.fragmentShader.replace('#include <emissivemap_fragment>',`#include <emissivemap_fragment>
-float vein=pow(1.-abs(sin(wp.y*4.+wp.x*2.+sin(wp.z*2.5))),14.); float ambientPulse=.25+.75*pow(.5+.5*sin(clock*1.8-length(wp.xz)*.8),5.); totalEmissiveRadiance+=vein*ambientPulse*vec3(.08,.65,.8)+abs(wave)*vec3(${kind===2?'1.,.32,.12':'.18,.85,.65'});`)};m.customProgramCacheKey=()=>String(kind);return m}
-const ground=material(0x354e58,0),stone=material(0x263b50,1),amber=material(0x9b6541,2),pale=material(0x597c80,1);
-const living=[];const g=new T.PlaneGeometry(100,100,140,140);g.rotateX(-Math.PI/2);let p=g.attributes.position;for(let i=0;i<p.count;i++)p.setY(i,height(p.getX(i),p.getZ(i)));g.computeVertexNormals();scene.add(new T.Mesh(g,ground));
-let seed=71;function rand(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
-for(let i=0;i<75;i++){let a=rand()*Math.PI*2,d=5+rand()*36,cx=Math.cos(a)*d,cz=Math.sin(a)*d,base=height(cx,cz),h=1+rand()*5,rad=.35+rand()*.9;let geo=new T.SphereGeometry(1,12,16),v=geo.attributes.position;for(let j=0;j<v.count;j++){let yy=v.getY(j),xx=v.getX(j),zz=v.getZ(j),s=1+.19*Math.sin(yy*9+xx*4+i);v.setXYZ(j,xx*rad*s+yy*yy*.5,yy*h*.5,zz*rad*s)}geo.computeVertexNormals();let mesh=new T.Mesh(geo,i%5===0?amber:i%3===0?pale:stone);mesh.position.set(cx,base+h*.38,cz);mesh.rotation.y=rand()*6.28;scene.add(mesh);living.push({mesh,base:mesh.position.clone(),phase:i*2.4,e:0,v:0,memory:0});
-if(i%3===0){let points=[];for(let j=0;j<9;j++){let f=j/8;points.push(new T.Vector3(cx+Math.sin(f*2.5)*2,base+.2+Math.sin(f*Math.PI)*h*.65,cz+f*2.5))}let tube=new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(points),18,.16+rad*.15,7,false),stone);scene.add(tube)}}
-scene.add(new T.HemisphereLight(0x9cbde0,0x202039,.85));let sun=new T.DirectionalLight(0xffc18a,3.8);sun.position.set(-12,18,-8);scene.add(sun);r.shadowMap.enabled=true;r.shadowMap.type=T.PCFSoftShadowMap;sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-28,right:28,top:28,bottom:-28,near:1,far:70});sun.shadow.bias=-.001;scene.traverse(o=>{if(o.isMesh){o.receiveShadow=true;o.castShadow=o.geometry!==g}});for(let i=0;i<16;i++){let a=i*2.39996,d=9+i*1.6,cx=Math.cos(a)*d,cz=Math.sin(a)*d;let pts=[];for(let j=0;j<12;j++){let f=j/11;pts.push(new T.Vector3(cx+Math.sin(f*3.14)*3,height(cx,cz)+f*7,cz+Math.sin(f*5)*1.5))}let branch=new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts),24,.23,8,false),stone);branch.castShadow=true;scene.add(branch);let orb=new T.Mesh(new T.IcosahedronGeometry(.55,1),amber);orb.position.copy(pts[11]);orb.position.y+=.7;scene.add(orb)}
-const bonds=[];for(let i=0;i<living.length;i++)for(let j=i+1;j<living.length;j++){let a=living[i],b=living[j],d=a.base.distanceTo(b.base);if(d<5&&bonds.length<120){let mesh=new T.Mesh(new T.CylinderGeometry(.12,.12,1,7),pale);mesh.visible=false;scene.add(mesh);bonds.push({a,b,d,mesh});}}
-const dustGeo=new T.BufferGeometry(),dust=new Float32Array(900);for(let i=0;i<300;i++){dust[i*3]=(rand()-.5)*75;dust[i*3+1]=rand()*8;dust[i*3+2]=(rand()-.5)*75;}dustGeo.setAttribute('position',new T.BufferAttribute(dust,3));const motes=new T.Points(dustGeo,new T.PointsMaterial({color:0x9eeed8,size:.075,transparent:true,opacity:.65,depthWrite:false}));scene.add(motes);
-// Local implicit surfaces: raymarch inside a bounding box, write actual surface depth.
-const implicitUniforms=[];
-for(let i=0;i<12;i++){
- const a=living[i*3];if(!a)continue;
- const box=new T.BoxGeometry(4.8,5.6,4.8);
- const u={clock:shared.clock,age:shared.age,strength:shared.strength,origin:shared.origin,center:{value:a.mesh.position.clone()},energy:{value:0},seed:{value:i*2.71}};
- const m=new T.ShaderMaterial({uniforms:u,side:T.BackSide,vertexShader:`
- varying vec3 world;void main(){world=(modelMatrix*vec4(position,1.)).xyz;gl_Position=projectionMatrix*viewMatrix*vec4(world,1.);}
- `,fragmentShader:`
- varying vec3 world;uniform mat4 projectionMatrix;uniform vec3 center;uniform float clock,energy,seed,age,strength;uniform vec2 origin;
- float sm(float a,float b,float k){float h=clamp(.5+.5*(b-a)/k,0.,1.);return mix(b,a,h)-k*h*(1.-h);}
- float field(vec3 p){float t=clock*.6+seed;float d=length(p*vec3(1.,.65,1.))-.82;for(int i=0;i<4;i++){float a=float(i)*1.57+t*.3;vec3 q=p-vec3(cos(a)*(.75+energy*.25),sin(t+float(i))*.7,sin(a)*(.75+energy*.25));d=sm(d,length(q*vec3(1.,.8,1.))-.48,.52);}return d+.055*sin(p.x*8.+t)*sin(p.y*7.)*sin(p.z*8.);}
- void main(){vec3 ro=cameraPosition-center,rd=normalize(world-cameraPosition);vec3 inv=1./rd;vec3 aa=(-vec3(2.4,2.8,2.4)-ro)*inv,bb=(vec3(2.4,2.8,2.4)-ro)*inv;vec3 lo=min(aa,bb),hi=max(aa,bb);float t=max(0.,max(lo.x,max(lo.y,lo.z))),end=min(hi.x,min(hi.y,hi.z));bool hit=false;vec3 p;for(int j=0;j<64;j++){p=ro+rd*t;float d=field(p);if(d<.012){hit=true;break;}t+=max(.012,d*.65);if(t>end)break;}if(!hit)discard;vec2 e=vec2(.012,0.);vec3 n=normalize(vec3(field(p+e.xyy)-field(p-e.xyy),field(p+e.yxy)-field(p-e.yxy),field(p+e.yyx)-field(p-e.yyx)));float light=max(0.,dot(n,normalize(vec3(-.6,1.,-.4))));float vein=pow(1.-abs(sin(p.y*6.+p.x*3.+sin(p.z*4.))),12.);float front=length((p+center).xz-origin)-age*7.;float pulse=exp(-front*front*.14)*strength;vec3 base=mix(vec3(.055,.17,.23),vec3(.48,.22,.11),.5+.5*sin(seed));vec3 col=base*(.35+light*1.5)+vein*vec3(.12,.75,.9)*(.3+energy+pulse)+pow(1.-max(0.,dot(n,-rd)),3.)*vec3(.13,.25,.35);col=mix(col,vec3(.15,.23,.31),1.-exp(-t*.037));gl_FragColor=vec4(col,1.);vec4 clip=projectionMatrix*viewMatrix*vec4(p+center,1.);gl_FragDepth=clip.z/clip.w*.5+.5;}
- `});const mesh=new T.Mesh(box,m);mesh.position.copy(a.mesh.position);scene.add(mesh);a.mesh.visible=false;implicitUniforms.push({a,mesh,u});
-}
-for(let i=0;i<18;i++){let a=i*2.39996,d=8+i*1.5;let mesh=new T.Mesh(new T.IcosahedronGeometry(.6+rand()*.8,1),i%2?amber:pale);mesh.position.set(Math.cos(a)*d,4+rand()*5,Math.sin(a)*d);mesh.rotation.set(rand(),rand(),rand());scene.add(mesh);}
-const axis=new T.Vector3(0,1,0),delta=new T.Vector3();
-function evolve(dt){let steps=Math.max(1,Math.ceil(dt/.012)),h=dt/steps;for(let step=0;step<steps;step++){let acc=living.map(n=>-5*n.e-.95*n.v+.32*Math.sin(t*1.6+n.phase));for(let b of bonds){let i=living.indexOf(b.a),j=living.indexOf(b.b),force=2.2*(b.b.e-b.a.e)/b.d;acc[i]+=force;acc[j]-=force;}living.forEach((n,i)=>{n.v+=acc[i]*h;n.e+=n.v*h;n.memory=Math.min(1,n.memory*Math.exp(-h*.18)+Math.abs(n.e)*h*.32);});}for(let n of living){let e=Math.tanh(n.e),m=n.memory;n.mesh.scale.set(1+.22*e+.18*m,1+.35*e+.35*m,1+.22*e+.18*m);n.mesh.position.y=n.base.y+.45*e+.35*m;n.mesh.rotation.z=.12*e;}for(let b of bonds){let energy=(b.a.memory+b.b.memory)*.5+Math.abs(b.a.e-b.b.e)*.35;b.mesh.visible=energy>.13;if(!b.mesh.visible)continue;delta.subVectors(b.b.mesh.position,b.a.mesh.position);b.mesh.position.copy(b.a.mesh.position).addScaledVector(delta,.5);b.mesh.quaternion.setFromUnitVectors(axis,delta.clone().normalize());let width=Math.min(2,energy*2);b.mesh.scale.set(width,delta.length(),width);}for(let q of implicitUniforms){q.mesh.position.copy(q.a.mesh.position);q.u.center.value.copy(q.mesh.position);q.u.energy.value=Math.min(1.5,Math.abs(q.a.e)+q.a.memory);}motes.position.y=.3*Math.sin(t*.4);motes.rotation.y=t*.008;}
-function resize(){r.setPixelRatio(high?Math.min(devicePixelRatio,1.5):.9);r.setSize(view.clientWidth,view.clientHeight);camera.aspect=view.clientWidth/view.clientHeight;camera.updateProjectionMatrix()}new ResizeObserver(resize).observe(view);resize();
-$('quality').onclick=()=>{high=!high;$('quality').textContent='Qualität: '+(high?'Hoch':'Mobil');resize()};$('pulse').onclick=()=>{imp=t;shared.origin.value.set(x,z);for(let n of living){let d=Math.hypot(n.base.x-x,n.base.z-z);n.v+=4*Math.exp(-d*.23)}};$('reset').onclick=()=>{x=0;z=7;yaw=0;pitch=-.08};
-let stick=$('stick');function move(e){let b=stick.getBoundingClientRect(),dx=e.clientX-b.left-56,dy=e.clientY-b.top-56,k=Math.max(40,Math.hypot(dx,dy));joyX=dx/k;joyY=dy/k;$('knob').style.transform='translate('+joyX*36+'px,'+joyY*36+'px)'}stick.onpointerdown=e=>{stick.setPointerCapture(e.pointerId);move(e)};stick.onpointermove=e=>{if(stick.hasPointerCapture(e.pointerId))move(e)};stick.onpointerup=stick.onpointercancel=()=>{joyX=joyY=0;$('knob').style.transform='none'};
-let drag=null;r.domElement.onpointerdown=e=>{drag=[e.clientX,e.clientY];r.domElement.setPointerCapture(e.pointerId)};r.domElement.onpointermove=e=>{if(!drag)return;yaw-=(e.clientX-drag[0])*.006;pitch=Math.max(-1.1,Math.min(1.1,pitch-(e.clientY-drag[1])*.006));drag=[e.clientX,e.clientY]};r.domElement.onpointerup=r.domElement.onpointercancel=()=>drag=null;
-let last=performance.now(),fps=60;function frame(now){let raw=(now-last)/1000;last=now;let dt=Math.min(raw,.05);t+=dt;fps=.95*fps+.05/Math.max(raw,.001);x+=(-joyY*Math.sin(yaw)+joyX*Math.cos(yaw))*dt*4;z+=(joyY*Math.cos(yaw)+joyX*Math.sin(yaw))*dt*4;for(let n of living){let dx=x-n.base.x,dz=z-n.base.z,d=Math.hypot(dx,dz),limit=n.mesh.visible?.65:1.25;if(d<limit&&d>.001){x=n.base.x+dx/d*limit;z=n.base.z+dz/d*limit;}}x=Math.max(-44,Math.min(44,x));z=Math.max(-44,Math.min(44,z));camera.position.set(x,height(x,z)+1.65,z);camera.rotation.order='YXZ';camera.rotation.set(pitch,-yaw,0);shared.clock.value=t;shared.age.value=t-imp;shared.strength.value=+$('amp').value;evolve(dt);r.render(scene,camera);$('status').textContent='0.6 · '+Math.round(fps)+' FPS · WebGL';requestAnimationFrame(frame)}requestAnimationFrame(frame)
-}catch(e){document.getElementById('status').textContent='Fehler: '+e.message}
-</script></html>
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Morphic Resonance Lab 0.21.0</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+ <main>
+  <div id="view" aria-label="Experimentelle Resonanzlandschaft">
+   <div id="status" role="status">Lade Umgebung…</div>
+  </div>
+  <section aria-label="Laborsteuerung">
+   <b id="version">MORPHIC RESONANCE LAB / 0.21.0</b>
+   <p id="hint">WASD: bewegen · Bild anklicken: Maus fangen · Escape: Maus freigeben · Leertaste: Impuls · R: Startpunkt. Mausfang nicht verfügbar? Linke Maustaste halten und ziehen.</p>
+   <div class="controls"><button id="pulse">Resonanzimpuls</button><button id="preview" hidden>Grottendemo starten</button><button id="reset">Startpunkt</button><button id="benchmark">60 s messen</button></div>
+   <p><label for="amp">Resonanzstärke</label><input id="amp" type="range" min="0" max="2" step=".1" value="1"></p>
+   <nav><a href="?scene=rift">Lebende Schlucht</a> · <a href="?scene=grotto">Resonanzgrotte</a> · <a href="?scene=lab">Formlabor</a> · <a href="?scene=world">Landschaft</a> · <a href="v06.html">Archiv 0.6</a> · <a href="v05.html">Archiv 0.5</a></nav>
+   <p class="note" id="scene-note">Formlabor: Resonanz verändert Form und Materialgedächtnis.</p>
+   <p id="rift-state" hidden></p>
+   <div id="lab-controls" hidden>
+    <div class="controls"><label for="target">Impulsziel</label>
+     <select id="target"><option value="0">A · weich</option><option value="1">B · dicht</option><option value="2">C · nachwirkend</option></select>
+     <label class="check"><input id="glow" type="checkbox"> Leuchten zum Vergleich</label>
+     <label class="check"><input id="shadows" type="checkbox" checked> Schatten</label>
+     <label class="check"><input id="held" type="checkbox"> Verbindungen halten (Wellentest)</label>
+     <label class="check"><input id="slow" type="checkbox"> Zeitlupe</label>
+    </div>
+    <div class="material-signals">
+     <label>A · weich <meter id="signal0" min="0" max="1" value="0"></meter><span id="memory0"></span></label>
+     <label>B · dicht <meter id="signal1" min="0" max="1" value="0"></meter><span id="memory1"></span></label>
+     <label>C · nachwirkend <meter id="signal2" min="0" max="1" value="0"></meter><span id="memory2"></span></label>
+    </div>
+   </div>
+   <pre id="report" aria-live="polite"></pre>
+  </section>
+ </main>
+ <script type="module" src="src/main.js"></script>
+</body>
+</html>

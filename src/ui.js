@@ -10,7 +10,7 @@ export function createUI({pulse,reset,benchmark,preview,lab,grotto,rift}){
  $('preview').textContent=previewName+' starten';
  $('rift-state').hidden=!rift;
  $('scene-note').textContent=rift
-  ? 'Ein Impuls mit Stärke 1 senkt den Felsbogen. Gehe danach mit W über den Steg. Startpunkt setzt die Schlucht zurück.'
+  ? 'Ein Impuls zieht durch die Gesteinsschichten bis zu den Auflagern des Bogens. Mit Stärke 1 geben sie nach. Sobald der Steg begehbar ist, geh mit W hinüber.'
   : grotto
   ? 'Die Demo zeigt drei Impulse aus demselben Blickwinkel. Beobachte, wie das Licht von links nach rechts wandert und der violette Fächer geöffnet bleibt.'
   : lab
@@ -28,7 +28,7 @@ export function createUI({pulse,reset,benchmark,preview,lab,grotto,rift}){
   status(fps,ms,info,nodes,riftState){
    const now=performance.now();if(now<nextStatus)return;nextStatus=now+200;
    $('status').textContent=VERSION+' · '+Math.round(fps)+' FPS · '+ms.toFixed(1)+' ms · '+info.render.calls+' Draws';
-   if(rift)$('rift-state').textContent=riftState.settled>=.85?'Felsbogen abgesenkt · Steg begehbar':riftState.age>=0&&riftState.age<4.8?'Resonanz im Gestein':'Felsbogen zu steil';
+   if(rift)$('rift-state').textContent=riftState.settled>=.85?'Felsbogen abgesenkt · Steg begehbar':riftState.active?'Resonanz im Gestein':'Felsbogen zu steil';
    if(lab)nodes.forEach((n,i)=>{
     $('signal'+i).value=n.activity;
     $('memory'+i).textContent='Reaktion '+Math.round(n.activity*100)+' % · Gedächtnis '+Math.round(n.memory*100)+' % · Formspur '+Math.round(Math.max(n.setLeft,n.setRight)*100)+' %';

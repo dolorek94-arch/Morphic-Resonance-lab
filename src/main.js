@@ -53,7 +53,7 @@ async function start(){
    reset();input.clear();document.exitPointerLock?.();
    profiler.start({version:VERSION,scene:sceneName,quality:'desktop-high',width:$('view').clientWidth,height:$('view').clientHeight,
     pixelRatio:r.getPixelRatio(),drawingBufferWidth:r.domElement.width,drawingBufferHeight:r.domElement.height,userAgent:navigator.userAgent,seed:CONFIG.seed,
-    viewport: {width:innerWidth,height:innerHeight},strength:1,target:lab?0:null,emission:false,shadows:lab||rift,heldConnections:lab&&!grotto,simulationSpeed:1,transport:lab?'spring-chain-8':null,pulseAtSimulationSecond:1,
+    viewport: {width:innerWidth,height:innerHeight},strength:1,target:lab?0:null,emission:false,shadows:lab||rift,heldConnections:lab&&!grotto,simulationSpeed:1,transport:rift?'morph-graph':lab?'spring-chain-8':null,pulseAtSimulationSecond:1,
     ...(grotto?{repeatPulseInterval:10}:rift?{pulseTimes:RIFT_PULSE_TIMES,resetBeforeEachPulse:true}:{})});
   }});
  new ResizeObserver(()=>{profiler.cancel();applySize();}).observe($('view'));

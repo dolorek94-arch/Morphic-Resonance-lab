@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../vendor/three.module.js';
 import {createRift} from '../src/rift.js';
-import {ARCH_NEAR,ARCH_FAR,archProgress,archCenter,archHeight} from '../src/rift-state.js';
+import {ARCH_NEAR,ARCH_FAR,archProgress,archCenter,archHeight,createRiftState} from '../src/rift-state.js';
 import {move,obstacles} from '../src/navigation.js';
 
 test('the same path is too steep before the pulse and crosses the exposed chasm afterwards',()=>{
@@ -30,4 +30,30 @@ test('the same path is too steep before the pulse and crosses the exposed chasm 
  world.reset();
  assert.ok(path().z>ARCH_NEAR-1);
  assert.equal(world.state.fracture,0);
+});
+
+test('rock response follows local load and reverses when excited from the far bank',()=>{
+ const state=createRiftState();
+ const peak=(ARCH_NEAR+ARCH_FAR)/2;
+ state.pulse(.3,-2);
+ let moved=false;
+ for(let i=0;i<360;i++){
+  state.update(1/60);
+  moved ||= Math.abs(state.morphs.seam.motion)>.02;
+ }
+ assert.ok(moved);
+ assert.equal(state.fracture,0);
+ assert.ok(archHeight(state,archCenter(.5),peak)>3.8);
+ const firstYield=z=>{
+  state.reset();
+  state.pulse(1,z);
+  for(let i=0;i<360;i++){
+   state.update(1/60);
+   if(state.morphs.near.scar>0)return state.morphs.far.scar>0?'far':'near';
+   if(state.morphs.far.scar>0)return 'far';
+  }
+  return null;
+ };
+ assert.equal(firstYield(-2),'near');
+ assert.equal(firstYield(-13),'far');
 });

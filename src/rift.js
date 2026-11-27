@@ -1,4 +1,4 @@
-import {ARCH_NEAR,ARCH_FAR,ARCH_HALF_WIDTH,archProgress,archCenter,archHeight,riftGround,waveAt,createRiftState} from './rift-state.js';
+import {ARCH_NEAR,ARCH_FAR,archHalfWidth,archCenter,archHeight,riftGround,createRiftState} from './rift-state.js';
 
 function surface(T,scene,material,columns,rows,flip=false){
  const geometry=new T.BufferGeometry(),indices=[];
@@ -55,6 +55,7 @@ export function createRift(T,scene,renderer){
   const bands=.5+.5*Math.sin(v*28+u*9+rockNoise(u,v)*.5);
   out.setHex(bands>.66?0x70828e:0x42586b).multiplyScalar(.84+.19*rockNoise(u,v)+.2*bands);
  };
+ const shadeFloor=(x,z,out)=>shadeStone(.5+x*.11,(3-z)*.097,out);
  const ledgeMaterial=new T.MeshStandardMaterial({color:0x546876,roughness:1});
  function slab(x,y,z,width,thickness,length,mat=ledgeMaterial){
   const mesh=new T.Mesh(new T.BoxGeometry(width,thickness,length),mat);
@@ -66,17 +67,15 @@ export function createRift(T,scene,renderer){
  for(const z of [ARCH_NEAR-.20,ARCH_FAR+.20])slab(0,-1.77,z,12,3.54,.40);
  const banks=[[3,ARCH_NEAR],[ARCH_FAR,-19]].map(([from,to])=>{
   const mesh=surface(T,scene,material,22,26);
-  mesh.bakeColor((u,v,out)=>shadeStone(u*.7+v*.2,v*.7+u*.36,out));
+  mesh.bakeColor((u,v,out)=>shadeFloor(12*u-6,from+(to-from)*v,out));
   return {from,to,mesh};
  });
  const archTop=surface(T,scene,material,12,48);
  archTop.mesh.name='rift-arch-deck';
  const sides=[surface(T,scene,material,3,48),surface(T,scene,material,3,48,true)];
- archTop.bakeColor((u,v,out)=>{
-  const band=.5+.5*Math.sin(v*43+u*4+rockNoise(u,v)*.5);
-  const edge=Math.min(u,1-u)<.14;
-  out.setHex(edge?0x5a8190:band>.65?0x839a9c:0x536e7d).multiplyScalar(.83+.25*band);
- });
+ const archX=(u,v)=>archCenter(v)+(2*u-1)*archHalfWidth(v);
+ const archZ=v=>ARCH_NEAR+(ARCH_FAR-ARCH_NEAR)*v;
+ archTop.bakeColor((u,v,out)=>shadeFloor(archX(u,v),archZ(v),out));
  sides.forEach(side=>side.bakeColor(shadeStone));
  const walls=[
   {side:-1,near:3,far:-6.3,shear:1},
@@ -87,13 +86,14 @@ export function createRift(T,scene,renderer){
   mesh.bakeColor((u,v,out)=>shadeStone(spec.side*.3+u,v,out));
   return {...spec,mesh};
  });
- // A warm face behind the fracture is only visible once the wall pulls apart.
- const fractureBackdrop=new T.Mesh(new T.PlaneGeometry(6,12),new T.MeshBasicMaterial({
-  color:0xffb880,side:T.DoubleSide,fog:false
- }));
- fractureBackdrop.rotation.y=Math.PI/2;fractureBackdrop.position.set(-6,3,-6.3);
- fractureBackdrop.visible=false;
- scene.add(fractureBackdrop);
+ const cut=walls.slice(0,2).map(()=>{
+  const lip=surface(T,scene,material,3,18);
+  lip.bakeColor((u,v,out)=>out.setHex(0x523c35).multiplyScalar(.56+.23*Math.sin(v*13)-u*.21));
+  return lip;
+ });
+ const fissureBack=surface(T,scene,new T.MeshBasicMaterial({vertexColors:true,side:T.DoubleSide}),3,18);
+ fissureBack.bakeColor((u,v,out)=>out.setHex(0xae5022)
+  .multiplyScalar(.27+.52*Math.exp(-12*(v-.52)**2)+.11*rockNoise(u,v)));
  const landmark=new T.IcosahedronGeometry(1,1);
  const fragments=new T.MeshStandardMaterial({color:0x647584,roughness:1,flatShading:true});
  for(let i=0;i<15;i++){
@@ -107,36 +107,50 @@ export function createRift(T,scene,renderer){
  const wall=(minX,maxX,minZ,maxZ)=>({type:'box',minX,maxX,minZ,maxZ,minY:-4,maxY:8});
  const colliders=[wall(-8,-3.4,-19,3.6),wall(3.4,8,-19,3.6),wall(-8,8,3,6),wall(-8,8,-22,-18)];
  const groundHeight=(x,z)=>riftGround(state,x,z);
+ function wallPoint(wall,u,v){
+  const {seam,rib,near}=state.morphs;
+  const edge=wall.shear===1?u:1-u;
+  const taper=Math.sin(v*Math.PI)**.65;
+  const split=.43*rib.settlement*Math.max(0,taper)*(.72+.28*Math.sin(v*25)**2);
+  const opening=wall.shear*Math.max(0,split+rib.motion*.12*taper)*edge**4;
+  const restZ=wall.near+(wall.far-wall.near)*u;
+  const along=(3-restZ)/22,y=-3.9+10.2*v;
+  const band=.56*Math.sin(v*23+along*4)+.25*rockNoise(along,v);
+  const local=(morph,width)=>morph.motion*Math.exp(-(((restZ-morph.z)/width)**2));
+  const motion=wall.side===-1?local(seam,2.3)+local(rib,1.4):local(near,2.3)*.32;
+  return [wall.side*(4.9+band+.22*Math.sin(along*13))-wall.side*motion,y,restZ+opening];
+ }
  function paint(){
   for(const bank of banks)bank.mesh.update((u,v)=>{
    const x=12*u-6,z=bank.from+(bank.to-bank.from)*v;
    return [x,groundHeight(x,z),z];
   });
   archTop.update((u,v)=>{
-   const x=archCenter(v)+(2*u-1)*ARCH_HALF_WIDTH,z=ARCH_NEAR+(ARCH_FAR-ARCH_NEAR)*v;
+   const x=archX(u,v),z=archZ(v);
    return [x,archHeight(state,x,z),z];
   });
   sides.forEach((side,i)=>side.update((u,v)=>{
-   const x=archCenter(v)+(i===0?-1:1)*(ARCH_HALF_WIDTH-.07*u),z=ARCH_NEAR+(ARCH_FAR-ARCH_NEAR)*v;
-   return [x,archHeight(state,x,z)-u*(.77+.18*Math.sin(Math.PI*v)),z];
+   const x=archCenter(v)+(i===0?-1:1)*(archHalfWidth(v)-.12*u),z=archZ(v);
+   return [x,archHeight(state,x,z)-u*(.60+.4*Math.sin(Math.PI*v)+.13*rockNoise(i,v)),z];
   }));
-  for(const wall of walls)wall.mesh.update((u,v)=>{
-   const edge=wall.shear===1?u:1-u;
-   const opening=wall.shear*(.48*state.fracture+.13*state.snap)*edge**4;
-   const restZ=wall.near+(wall.far-wall.near)*u;
-   const z=restZ+opening;
-   const along=(3-restZ)/22;
-   const y=-3.9+10.2*v;
-   const band=.56*Math.sin(v*23+along*4)+.25*rockNoise(along,v);
-   const distance=.20+Math.abs(restZ-state.origin)*.32+v*.28;
-   const wave=waveAt(state.age,distance)*(wall.side===-1?.95:.38);
-   return [wall.side*(4.9+band+.22*Math.sin(along*13))-wall.side*wave,y,z];
+  for(const wall of walls)wall.mesh.update((u,v)=>wallPoint(wall,u,v));
+  const opening=state.fracture>.003;
+  cut.forEach((lip,i)=>{
+   lip.mesh.visible=opening;
+   if(opening)lip.update((u,v)=>{
+    const [x,y,z]=wallPoint(walls[i],i===0?1:0,v);
+    return [x-1.05*u,y,z+(i===0?-1:1)*.06*u];
+   });
   });
-  fractureBackdrop.visible=state.fracture>0;
-  fissureLight.intensity=state.fracture*48+Math.max(0,state.snap)*24;
-  const stopping=state.age>3.2;
-  waveLight.position.set(stopping?0:-3.6,1.4,Math.max(-11,state.origin-state.age*2.6));
-  waveLight.intensity=state.age<0||state.age>4.8?0:22*Math.sin(Math.PI*state.age/4.8);
+  fissureBack.mesh.visible=opening;
+  if(opening)fissureBack.update((u,v)=>{
+   const [x,y,front]=wallPoint(walls[0],1,v),back=wallPoint(walls[1],0,v)[2];
+   return [x-1.06,y,front+(back-front)*u];
+  });
+  fissureLight.intensity=state.fracture*23+Math.abs(state.morphs.rib.motion)*8;
+  const wave=state.wave;
+  if(wave)waveLight.position.set(wave.x,1.4,wave.z);
+  waveLight.intensity=wave?11*wave.load:0;
   renderer.shadowMap.needsUpdate=true;
  }
  paint();
@@ -151,7 +165,7 @@ export function createRift(T,scene,renderer){
   reset(){state.reset();paint();},
   update(dt=0,_glow=false,shadows=true){
    if(sun.castShadow!==shadows){sun.castShadow=shadows;renderer.shadowMap.needsUpdate=true;}
-   if(state.age<0||state.age>=4.8||dt===0)return;
+   if(!state.active||dt===0)return;
    state.update(dt);paint();
   }
  };

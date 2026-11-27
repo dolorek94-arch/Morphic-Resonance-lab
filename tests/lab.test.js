@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import * as T from '../vendor/three.module.js';
 import {createLab} from '../src/lab.js';
 import {createSimulation} from '../src/simulation.js';
+import {createNeckGeometry,updateNeckGeometry,bodyVolumeScale} from '../src/neck-geometry.js';
 function fixture(){
  const scene=new T.Scene(),camera=new T.PerspectiveCamera(70,1,.1,100);
  const shared={clock:{value:0},origin:{value:new T.Vector2()},age:{value:100},strength:{value:1}};
@@ -41,6 +42,32 @@ test('a single impulse propagates A to B to C, raises connection activation and 
  assert.ok(maxBridge[0]>.9&&maxBridge[1]>.55);
  for(const b of world.bonds)assert.ok(b.activation<.01);
 });
+test('material leaves the bodies for a neck, recoils after release and retains a form change',()=>{
+ const {world,simulation,tick}=fixture();
+ const geometry=createNeckGeometry();
+ const [a,b]=world.living;
+ const bond=world.bonds[0];
+ let joined=false,released=false,minScale=1;
+ for(let i=1;i<=3600;i++){
+  if([1,241,481,721].includes(i))simulation.impulse(0,0,1,0);
+  tick(1/60,i/60);
+  updateNeckGeometry(geometry,world.living,world.bonds);
+  if(bond.joined){
+   joined=true;
+   minScale=Math.min(minScale,bodyVolumeScale(geometry,0));
+   const toSeamA=geometry.end[12]-geometry.start[0];
+   const toSeamB=geometry.start[16]-geometry.end[28];
+   assert.ok(toSeamA>toSeamB);
+  }
+  if(joined&&!bond.joined&&Math.abs(a.recoil)>.03)released=true;
+ }
+ assert.ok(joined&&released&&minScale<.97);
+ assert.ok(bodyVolumeScale(geometry,0)>.999);
+ assert.ok(Math.abs(a.recoil)<.001&&Math.abs(b.recoil)<.001);
+ assert.ok(a.memory<.001&&a.setRight>.1);
+ world.reset();
+ assert.equal(a.setRight,0);
+});
 test('repeated maximum impulses stay finite and reset clears material and connection history',()=>{
  const {world,simulation,tick}=fixture();
  for(let i=1;i<=3600;i++){
@@ -58,3 +85,4 @@ test('repeated maximum impulses stay finite and reset clears material and connec
  for(const n of world.living)assert.equal(n.activity,0);
  for(const b of world.bonds)assert.equal(b.activation,0);
 });
+

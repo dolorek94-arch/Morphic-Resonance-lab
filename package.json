@@ -1,6 +1,6 @@
 {
   "name": "morphic-resonance-lab",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,3 +8,4 @@
     "test": "node --test"
   }
 }
+

@@ -3,7 +3,7 @@ import {labFragment} from './rendering/lab-shader.js';
 import {labFloorFragment} from './rendering/lab-floor.js';
 import {LAB_HALF_BOUNDS,LAB_LIGHTING} from './lab-lighting-config.js';
 import {LAB_MATERIALS,updateLabState,resetLabState} from './lab-state.js';
-import {createNeckGeometry,updateNeckGeometry} from './neck-geometry.js';
+import {createNeckGeometry,updateNeckGeometry,bodyVolumeScale} from './neck-geometry.js';
 import {createTransport} from './transport.js';
 export function createLab(T,scene,r,shared,camera){
  scene.background=new T.Color(0x17212a);
@@ -23,7 +23,8 @@ export function createLab(T,scene,r,shared,camera){
  const uniforms={
   clock:shared.clock,center:{value:center},projectionMatrix:{value:camera.projectionMatrix},
   displacement:{value:new T.Vector3()},memory:{value:new T.Vector3()},
-  activity:{value:new T.Vector3()},neckStart:{value:necks.start},neckEnd:{value:necks.end},glow:{value:0},
+  activity:{value:new T.Vector3()},bodyScale:{value:new T.Vector3()},recoil:{value:new T.Vector3()},
+  setLeft:{value:new T.Vector3()},setRight:{value:new T.Vector3()},neckStart:{value:necks.start},neckEnd:{value:necks.end},glow:{value:0},
   halfBounds:{value:new T.Vector3().fromArray(LAB_HALF_BOUNDS)},
   lightDirection:{value:new T.Vector3().fromArray(LAB_LIGHTING.direction).normalize()},
   keyTint:{value:new T.Vector3().fromArray(LAB_LIGHTING.keyTint)},
@@ -41,13 +42,18 @@ export function createLab(T,scene,r,shared,camera){
   integrate:transport.integrate,
   reset(){resetLabState(living,bonds);transport.reset();},
   update(dt=0,glow=false,shadows=true,held=false){
-   updateLabState(living,bonds,dt);
+   updateLabState(living,bonds,dt,held);
    updateNeckGeometry(necks,living,bonds,{held});
    uniforms.displacement.value.set(...living.map(n=>Math.tanh(n.e)));
    uniforms.memory.value.set(...living.map(n=>n.memory));
    uniforms.activity.value.set(...living.map(n=>n.activity));
+   uniforms.bodyScale.value.set(...living.map((_,i)=>bodyVolumeScale(necks,i)));
+   uniforms.recoil.value.set(...living.map(n=>n.recoil));
+   uniforms.setLeft.value.set(...living.map(n=>n.setLeft));
+   uniforms.setRight.value.set(...living.map(n=>n.setRight));
    uniforms.glow.value=glow?1:0;
    uniforms.shadowEnabled.value=shadows?1:0;
   }
  };
 }
+

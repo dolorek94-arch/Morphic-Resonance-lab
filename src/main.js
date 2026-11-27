@@ -1,0 +1,65 @@
+import {CONFIG,VERSION,height} from './config.js';
+import {createWorld} from './world.js';
+import {createLab} from './lab.js';
+import {createRenderer} from './rendering/renderer.js';
+import {createSimulation} from './simulation.js';
+import {createInput} from './input.js';
+import {direction,move,obstacles} from './navigation.js';
+import {$,createUI} from './ui.js';
+import {createProfiler} from './profiling.js';
+async function start(){
+ const T=await import('../vendor/three.module.js');
+ let failed=false;
+ const fail=e=>{failed=true;$('status').textContent='Fehler: '+e.message;console.error(e);};
+ const {renderer:r,scene,camera,resize}=createRenderer(T,$('view'),fail);
+ const shared={clock:{value:0},origin:{value:new T.Vector2()},age:{value:100},strength:{value:1}};
+ const lab=new URLSearchParams(location.search).get('scene')==='lab';
+ const world=(lab?createLab:createWorld)(T,scene,r,shared,camera);
+ const simulation=createSimulation(T,world),profiler=createProfiler();
+ const position={x:CONFIG.spawn.x,z:CONFIG.spawn.z};
+ let t=0,imp=-100,high=false,input,ui;
+ function reset(){
+  profiler.cancel();input?.clear();Object.assign(position,CONFIG.spawn);
+  if(input)Object.assign(input.state,{yaw:CONFIG.spawn.yaw,pitch:CONFIG.spawn.pitch});
+  t=0;imp=-100;for(const n of world.living){n.e=0;n.v=0;n.memory=0;}
+  simulation.evolve(0,0);world.update?.();
+  move(position,{x:0,z:0},0,obstacles(world));
+ }
+ function pulse(){if(profiler.active)return;imp=t;shared.origin.value.set(position.x,position.z);simulation.impulse(position.x,position.z);}
+ input=createInput(r.domElement,$('stick'),$('knob'),pulse,reset);
+ const applyQuality=()=>{resize(high);world.quality?.(high);};
+ ui=createUI({pulse,reset,quality(){profiler.cancel();high=!high;ui.quality(high);applyQuality();},
+  benchmark(){
+   reset();input.clear();document.exitPointerLock?.();
+   profiler.start({version:VERSION,scene:lab?'lab':'world',quality:high?'high':'mobile',width:$('view').clientWidth,height:$('view').clientHeight,
+    pixelRatio:r.getPixelRatio(),userAgent:navigator.userAgent,seed:CONFIG.seed,
+    viewport: {width:innerWidth,height:innerHeight},strength:1,pulseAtSimulationSecond:1});
+  }});
+ new ResizeObserver(()=>{profiler.cancel();applyQuality();}).observe($('view'));
+ document.addEventListener('visibilitychange',()=>{profiler.cancel();last=performance.now();});
+ applyQuality();reset();
+ let last=performance.now(),fps=60,smoothedMs=16.7;
+ function frame(now){
+  try{
+   const raw=Math.max(.001,(now-last)/1000);last=now;const dt=Math.min(raw,CONFIG.maxDt);
+   const previous=t;t+=dt;
+   if(profiler.active&&previous<1&&t>=1){imp=t;shared.origin.value.set(position.x,position.z);simulation.impulse(position.x,position.z);}
+   shared.clock.value=t;shared.age.value=t-imp;shared.strength.value=profiler.active?1:ui.strength();
+   simulation.evolve(dt,t);world.update?.();
+   const axes=profiler.active?{right:0,forward:0}:input.axes();
+   const yaw=profiler.active?CONFIG.spawn.yaw:input.state.yaw,pitch=profiler.active?CONFIG.spawn.pitch:input.state.pitch;
+   const velocity=direction(yaw,axes.right,axes.forward);
+   velocity.x*=CONFIG.speed;velocity.z*=CONFIG.speed;move(position,velocity,dt,obstacles(world));
+   camera.position.set(position.x,height(position.x,position.z)+CONFIG.eyeHeight,position.z);
+   camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0);
+   r.render(scene,camera);
+   if(failed)return;
+   fps=.95*fps+.05/raw;smoothedMs=.95*smoothedMs+.05*raw*1000;
+   ui.status(fps,smoothedMs,r.info);profiler.sample(raw*1000,r.info);
+   requestAnimationFrame(frame);
+  }catch(e){fail(e);}
+ }
+ requestAnimationFrame(frame);
+}
+start().catch(e=>{$('status').textContent='Fehler: '+e.message;console.error(e);});
+

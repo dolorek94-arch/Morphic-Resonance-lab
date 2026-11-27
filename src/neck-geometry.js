@@ -19,7 +19,8 @@ export function updateNeckGeometry(buffers,nodes,bonds,{held=false}={}){
   const mobilityA=a.mobility??1,mobilityB=b.mobility??1;
   const seam=.5+.38*(mobilityA-mobilityB)/(mobilityA+mobilityB);
   const ax=(bond.i-1)*2.8-(a.recoil??0),bx=(bond.j-1)*2.8-(b.recoil??0);
-  const ay=.20*ea+.12*a.memory,by=.20*eb+.12*b.memory;
+  const ay=(a.offsetY??0)+.20*ea+.12*a.memory,by=(b.offsetY??0)+.20*eb+.12*b.memory;
+  const az=a.offsetZ??0,bz=b.offsetZ??0;
   const bendY=index===0?-.28+.12*(ea-eb):.36+.10*(eb-ea);
   const memory=Math.min(a.memory,b.memory);
   const bendZ=index===0?.18+.08*memory:-.28-.06*memory;
@@ -31,7 +32,7 @@ export function updateNeckGeometry(buffers,nodes,bonds,{held=false}={}){
    const wave=sampleTransport(bond.wave,t);
    const bend=.16*Math.tanh(2*wave.displacement)*envelope;
    const twist=.07*Math.tanh(.25*wave.velocity)*envelope;
-   return [ax+(bx-ax)*t,ay+(by-ay)*t+bendY*arc+bend,bendZ*arc+twist,radius];
+   return [ax+(bx-ax)*t,ay+(by-ay)*t+bendY*arc+bend,az+(bz-az)*t+bendZ*arc+twist,radius];
   }
   for(let side=0;side<2;side++){
    const node=side===0?a:b;

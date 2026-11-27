@@ -1,14 +1,19 @@
 import {VERSION} from './config.js';
 export const $=id=>document.getElementById(id);
-export function createUI({pulse,reset,benchmark,lab}){
+export function createUI({pulse,reset,benchmark,preview,lab,grotto}){
  $('version').textContent='MORPHIC RESONANCE LAB / '+VERSION;
  $('pulse').onclick=pulse;$('reset').onclick=reset;$('benchmark').onclick=benchmark;
  $('lab-controls').hidden=!lab;
- $('scene-note').textContent=lab
+ $('preview').hidden=!grotto;
+ $('preview').onclick=preview;
+ $('scene-note').textContent=grotto
+  ? 'Die Demo zeigt drei Impulse aus demselben Blickwinkel. Beobachte, wie das Licht von links nach rechts wandert und der violette F�cher ge�ffnet bleibt.'
+  : lab
   ? 'Resonanz zieht Material aus den K�rpern in die H�lse. Wiederholte Impulse hinterlassen eine Formspur. Startpunkt l�scht sie. Verbindungen halten zeigt den Wellentest.'
   : 'Archivierte Versuchsanordnung der Landschaft. Das neue Resonanzverhalten wird zuerst im Formlabor entwickelt.';
  let nextStatus=0;
  return {
+  setDemo(active){$('preview').textContent=active?'Grottendemo stoppen':'Grottendemo starten';},
   strength:()=>+$('amp').value,
   target:()=>+$('target').value,
   glow:()=>$('glow').checked,

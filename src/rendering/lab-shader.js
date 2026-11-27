@@ -42,6 +42,11 @@ void main(){
  col+=remembered*vec3(.035,.025,.015);
  float vein=pow(1.-abs(sin(p.y*6.+p.x*3.+sin(p.z*4.))),14.);
  col+=glow*vein*(.05+.32*dot(weights,activity))*vec3(.15,.65,.58);
+#ifdef GROTTO
+ float response=dot(weights,activity);
+ float seam=.5+.5*sin(p.y*10.+sin(p.z*5.)+p.x*2.);
+ col+=base*(.24*rim+response*(.32+.27*seam));
+#endif
  float fog=1.-exp(-travel*travel*.025*.025);
  col=mix(col,vec3(.09,.13,.165),fog);
  vec4 clip=projectionMatrix*viewMatrix*vec4(p+center,1.);
@@ -51,3 +56,4 @@ void main(){
 }
 
 `;
+

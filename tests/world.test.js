@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import * as T from '../vendor/three.module.js';
 import {createWorld} from '../src/world.js';
 import {createLab} from '../src/lab.js';
+import {createGrotto,GROTTO_PULSES,GROTTO_DEMO_END} from '../src/grotto.js';
 import {createSimulation} from '../src/simulation.js';
 import {move,obstacles} from '../src/navigation.js';
 function setup(factory){
@@ -10,7 +11,7 @@ function setup(factory){
  const shared={clock:{value:0},origin:{value:new T.Vector2()},age:{value:100},strength:{value:1}};
  return {scene,camera,world:factory(T,scene,r,shared,camera)};
 }
-for(const [name,factory,count] of [['world',createWorld,75],['lab',createLab,3]]){
+for(const [name,factory,count] of [['world',createWorld,75],['lab',createLab,3],['grotto',createGrotto,3]]){
  test(name+' builds offline, evolves finite geometry and keeps a clear reset point',()=>{
   const {scene,camera,world}=setup(factory);
   assert.equal(world.living.length,count);
@@ -30,8 +31,24 @@ for(const [name,factory,count] of [['world',createWorld,75],['lab',createLab,3]]
   scene.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});
  });
 }
+test('the grotto demo carries light downstream and preserves a change in the final formation',()=>{
+ const {world,scene}=setup(createGrotto);
+ const sim=createSimulation(T,world);
+ const first=Array(3).fill(undefined);
+ const lights=scene.children.filter(child=>child.isPointLight);
+ for(let i=1;i<=GROTTO_DEMO_END*60;i++){
+  if(GROTTO_PULSES.includes(i/60))sim.impulse(0,0,1.35,0);
+  sim.evolve(1/60,i/60);
+  world.update(1/60);
+  lights.forEach((light,j)=>{if(light.intensity>4)first[j]??=i;});
+ }
+ assert.ok(first[0]<first[1]&&first[1]<first[2]);
+ assert.ok(world.living[2].setLeft>.12);
+ assert.ok(world.bonds.every(bond=>!bond.joined));
+});
 test('world generation uses the same seed for repeatable comparisons',()=>{
  const a=setup(createWorld),b=setup(createWorld);
  assert.deepEqual(a.world.living.map(n=>n.base.toArray()),b.world.living.map(n=>n.base.toArray()));
 });
+
 

@@ -26,7 +26,7 @@ export function updateLabState(nodes,bonds,dt,held=false){
   for(const [node,sign] of [[b.a,1],[b.b,-1]]){
    const age=b.releaseAge;
    if(age<2)node.recoil+=sign*.24*node.mobility*Math.exp(-age*node.recoilDamping)*Math.sin(age*node.recoilFrequency);
-   const stress=Math.max(0,node.activity-.25)*(held?1:b.activation);
+   const stress=Math.max(0,node.activity-(node.yieldThreshold??.25))*(held?1:b.activation);
    const key=sign>0?'setRight':'setLeft';
    const set=node[key]??0;
    node[key]=approach(set,1,node.yieldRate*stress,dt);

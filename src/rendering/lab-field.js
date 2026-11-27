@@ -3,6 +3,7 @@ import {NECK_SEGMENTS,SEGMENTS_PER_BOND} from '../neck-geometry.js';
 export const labUniforms=`varying vec3 world;
 uniform mat4 projectionMatrix;
 uniform vec3 center,displacement,memory,activity,bodyScale,recoil,setLeft,setRight;
+uniform vec3 offsetY,offsetZ;
 uniform vec4 neckStart[${NECK_SEGMENTS}],neckEnd[${NECK_SEGMENTS}];
 uniform vec3 halfBounds,lightDirection,keyTint,skyTint;
 uniform float clock,glow,shadowEnabled,shadowSoftness,shadowBias;
@@ -30,6 +31,11 @@ float body(vec3 p,int kind,float x,float e,float m,vec3 aspect,float volumeScale
   // Thin membrane: tapered leaf with a bent tip and longer-lived folds.
   q.x+=.16*q.y*q.y+.12*m*q.y;
   q.z+=.09*m*sin(q.y*3.)+.055*e*q.y;
+#ifdef GROTTO
+  float opening=smoothstep(0.,.20,retained.x)*.48+.30*max(0.,e);
+  q.y/=1.+opening*smoothstep(-.2,.65,q.y);
+  q.x-=opening*.54*q.y*q.y;
+#endif
  }
  float softness=kind==1?.09:.24;
  float retention=kind==1?.09:.22;
@@ -49,9 +55,9 @@ float taperedNeck(vec3 p,vec4 a,vec4 b){
  return length(p-mix(a.xyz,b.xyz,h))-mix(a.w,b.w,h);
 }
 float field(vec3 p){
- float a=body(p,0,-2.8,displacement.x,memory.x,vec3(1.,1.15,1.),bodyScale.x,recoil.x,vec2(setLeft.x,setRight.x));
- float b=body(p,1,0.,displacement.y,memory.y,vec3(1.05,.88,1.05),bodyScale.y,recoil.y,vec2(setLeft.y,setRight.y));
- float c=body(p,2,2.8,displacement.z,memory.z,vec3(1.,1.4,.55),bodyScale.z,recoil.z,vec2(setLeft.z,setRight.z));
+ float a=body(p-vec3(0.,offsetY.x,offsetZ.x),0,-2.8,displacement.x,memory.x,vec3(1.,1.15,1.),bodyScale.x,recoil.x,vec2(setLeft.x,setRight.x));
+ float b=body(p-vec3(0.,offsetY.y,offsetZ.y),1,0.,displacement.y,memory.y,vec3(1.05,.88,1.05),bodyScale.y,recoil.y,vec2(setLeft.y,setRight.y));
+ float c=body(p-vec3(0.,offsetY.z,offsetZ.z),2,2.8,displacement.z,memory.z,vec3(1.,1.4,.55),bodyScale.z,recoil.z,vec2(setLeft.z,setRight.z));
  float d=sm(sm(a,b,.06),c,.06);
  float leftNeck=1000.,rightNeck=1000.;
  for(int i=0;i<${NECK_SEGMENTS};i++){

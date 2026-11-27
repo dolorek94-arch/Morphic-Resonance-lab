@@ -7,9 +7,9 @@ export function createUI({pulse,reset,benchmark,preview,lab,grotto}){
  $('preview').hidden=!grotto;
  $('preview').onclick=preview;
  $('scene-note').textContent=grotto
-  ? 'Die Demo zeigt drei Impulse aus demselben Blickwinkel. Beobachte, wie das Licht von links nach rechts wandert und der violette F�cher ge�ffnet bleibt.'
+  ? 'Die Demo zeigt drei Impulse aus demselben Blickwinkel. Beobachte, wie das Licht von links nach rechts wandert und der violette Fächer geöffnet bleibt.'
   : lab
-  ? 'Resonanz zieht Material aus den K�rpern in die H�lse. Wiederholte Impulse hinterlassen eine Formspur. Startpunkt l�scht sie. Verbindungen halten zeigt den Wellentest.'
+  ? 'Resonanz zieht Material aus den Körpern in die Hälse. Wiederholte Impulse hinterlassen eine Formspur. Startpunkt löscht sie. Verbindungen halten zeigt den Wellentest.'
   : 'Archivierte Versuchsanordnung der Landschaft. Das neue Resonanzverhalten wird zuerst im Formlabor entwickelt.';
  let nextStatus=0;
  return {
@@ -22,12 +22,11 @@ export function createUI({pulse,reset,benchmark,preview,lab,grotto}){
   slow:()=>$('slow').checked,
   status(fps,ms,info,nodes){
    const now=performance.now();if(now<nextStatus)return;nextStatus=now+200;
-   $('status').textContent=VERSION+' � '+Math.round(fps)+' FPS � '+ms.toFixed(1)+' ms � '+info.render.calls+' Draws';
+   $('status').textContent=VERSION+' · '+Math.round(fps)+' FPS · '+ms.toFixed(1)+' ms · '+info.render.calls+' Draws';
    if(lab)nodes.forEach((n,i)=>{
     $('signal'+i).value=n.activity;
-    $('memory'+i).textContent='Reaktion '+Math.round(n.activity*100)+' % � Ged�chtnis '+Math.round(n.memory*100)+' % � Formspur '+Math.round(Math.max(n.setLeft,n.setRight)*100)+' %';
+    $('memory'+i).textContent='Reaktion '+Math.round(n.activity*100)+' % · Gedächtnis '+Math.round(n.memory*100)+' % · Formspur '+Math.round(Math.max(n.setLeft,n.setRight)*100)+' %';
    });
   }
  };
 }
-

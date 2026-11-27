@@ -1,7 +1,7 @@
 export const LAB_MATERIALS=Object.freeze([
- Object.freeze({name:'A � weich',stiffness:3.2,damping:1.05,forcing:0,memoryDecay:.65,memoryGain:.6,mobility:1.45,recoilFrequency:16,recoilDamping:5,yieldRate:.22}),
- Object.freeze({name:'B � dicht',stiffness:9,damping:1.6,forcing:0,memoryDecay:.3,memoryGain:.55,mobility:.65,recoilFrequency:22,recoilDamping:9,yieldRate:.09}),
- Object.freeze({name:'C � nachwirkend',stiffness:2.2,damping:.8,forcing:0,memoryDecay:.1,memoryGain:.7,mobility:1.1,recoilFrequency:11,recoilDamping:3,yieldRate:.34})
+ Object.freeze({name:'A · weich',stiffness:3.2,damping:1.05,forcing:0,memoryDecay:.65,memoryGain:.6,mobility:1.45,recoilFrequency:16,recoilDamping:5,yieldRate:.22}),
+ Object.freeze({name:'B · dicht',stiffness:9,damping:1.6,forcing:0,memoryDecay:.3,memoryGain:.55,mobility:.65,recoilFrequency:22,recoilDamping:9,yieldRate:.09}),
+ Object.freeze({name:'C · nachwirkend',stiffness:2.2,damping:.8,forcing:0,memoryDecay:.1,memoryGain:.7,mobility:1.1,recoilFrequency:11,recoilDamping:3,yieldRate:.34})
 ]);
 const clamp01=value=>Math.max(0,Math.min(1,value));
 const approach=(value,target,rate,dt)=>target+(value-target)*Math.exp(-dt*rate);
@@ -37,4 +37,3 @@ export function resetLabState(nodes,bonds){
  for(const n of nodes)Object.assign(n,{activity:0,recoil:0,setLeft:0,setRight:0});
  for(const b of bonds)Object.assign(b,{activation:0,joined:false,releaseAge:Infinity});
 }
-

@@ -7,7 +7,7 @@ export function createRenderer(T,view,fail){
  };
  const scene=new T.Scene();scene.background=new T.Color(0x263b50);scene.fog=new T.FogExp2(0x263b50,.047);
  const camera=new T.PerspectiveCamera(70,1,.1,100);
- const resize=high=>{renderer.setPixelRatio(high?Math.min(devicePixelRatio,1.5):.9);renderer.setSize(view.clientWidth,view.clientHeight);camera.aspect=view.clientWidth/view.clientHeight;camera.updateProjectionMatrix();};
+ const resize=()=>{renderer.setPixelRatio(devicePixelRatio||1);renderer.setSize(view.clientWidth,view.clientHeight);camera.aspect=view.clientWidth/view.clientHeight;camera.updateProjectionMatrix();};
  return {renderer,scene,camera,resize};
 }
 

@@ -17,7 +17,7 @@ async function start(){
  const world=(lab?createLab:createWorld)(T,scene,r,shared,camera);
  const simulation=createSimulation(T,world),profiler=createProfiler();
  const position={x:CONFIG.spawn.x,z:CONFIG.spawn.z};
- let t=0,imp=-100,high=false,input,ui;
+ let t=0,imp=-100,input,ui;
  function reset(){
   profiler.cancel();input?.clear();Object.assign(position,CONFIG.spawn);
   if(input)Object.assign(input.state,{yaw:CONFIG.spawn.yaw,pitch:CONFIG.spawn.pitch});
@@ -26,18 +26,18 @@ async function start(){
   move(position,{x:0,z:0},0,obstacles(world));
  }
  function pulse(){if(profiler.active)return;imp=t;shared.origin.value.set(position.x,position.z);simulation.impulse(position.x,position.z);}
- input=createInput(r.domElement,$('stick'),$('knob'),pulse,reset);
- const applyQuality=()=>{resize(high);world.quality?.(high);};
- ui=createUI({pulse,reset,quality(){profiler.cancel();high=!high;ui.quality(high);applyQuality();},
+ input=createInput(r.domElement,pulse,reset);
+ const applySize=()=>resize();
+ ui=createUI({pulse,reset,
   benchmark(){
    reset();input.clear();document.exitPointerLock?.();
-   profiler.start({version:VERSION,scene:lab?'lab':'world',quality:high?'high':'mobile',width:$('view').clientWidth,height:$('view').clientHeight,
-    pixelRatio:r.getPixelRatio(),userAgent:navigator.userAgent,seed:CONFIG.seed,
+   profiler.start({version:VERSION,scene:lab?'lab':'world',quality:'desktop-high',width:$('view').clientWidth,height:$('view').clientHeight,
+    pixelRatio:r.getPixelRatio(),drawingBufferWidth:r.domElement.width,drawingBufferHeight:r.domElement.height,userAgent:navigator.userAgent,seed:CONFIG.seed,
     viewport: {width:innerWidth,height:innerHeight},strength:1,pulseAtSimulationSecond:1});
   }});
- new ResizeObserver(()=>{profiler.cancel();applyQuality();}).observe($('view'));
+ new ResizeObserver(()=>{profiler.cancel();applySize();}).observe($('view'));
  document.addEventListener('visibilitychange',()=>{profiler.cancel();last=performance.now();});
- applyQuality();reset();
+ applySize();reset();
  let last=performance.now(),fps=60,smoothedMs=16.7;
  function frame(now){
   try{

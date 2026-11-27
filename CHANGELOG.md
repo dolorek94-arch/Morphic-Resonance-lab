@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.1 desktop development candidate
+
+PC-only scope: removed touch joystick and mobile quality switching. Native desktop pixel ratio, fixed high lab quality, explicit mouse-drag fallback, drawing-buffer benchmark dimensions and PowerShell-compatible start instructions. Recorded the user's 60-second 0.7.0 landscape result (179.98 FPS at 1090×643); larger-resolution acceptance remains pending.
+
 ## 0.7.0 development candidate
 
 Desktop/touch input, corrected camera-relative movement, geometry-aware collision approximation and a clear reset location. Modular source, offline Three r170, regression tests and measurement controls. Optional connected SDF form laboratory.

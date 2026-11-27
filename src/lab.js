@@ -15,14 +15,13 @@ export function createLab(T,scene,r,shared,camera){
  const bonds=[{a:living[0],b:living[1],i:0,j:1,d:2},{a:living[1],b:living[2],i:1,j:2,d:2}];
  for(const b of bonds){b.mesh=new T.Object3D();}
  const uniforms={...shared,center:{value:center},energy:{value:0},energies:{value:new T.Vector3()},seed:{value:2.71},projectionMatrix:{value:camera.projectionMatrix}};
- const material=new T.ShaderMaterial({defines:{STEPS:64},uniforms,side:T.BackSide,vertexShader:implicitVertex,fragmentShader:labFragment});
+ const material=new T.ShaderMaterial({defines:{STEPS:80},uniforms,side:T.BackSide,vertexShader:implicitVertex,fragmentShader:labFragment});
  const proxy=new T.Mesh(new T.BoxGeometry(9,6,6),material);proxy.position.copy(center);scene.add(proxy);
  scene.add(new T.HemisphereLight(0x8eabc5,0x252039,1));
  const sun=new T.DirectionalLight(0xffc18a,3);sun.position.set(-6,12,3);scene.add(sun);
  const motes=new T.Object3D();
  return {living,bonds,motes,implicitUniforms:[],colliders:[],
-  update(){uniforms.energies.value.set(...living.map(n=>Math.min(1.5,Math.abs(n.e)+n.memory)));uniforms.energy.value=uniforms.energies.value.length()/Math.sqrt(3);},
-  quality(high){material.defines.STEPS=high?80:48;material.needsUpdate=true;}
+  update(){uniforms.energies.value.set(...living.map(n=>Math.min(1.5,Math.abs(n.e)+n.memory)));uniforms.energy.value=uniforms.energies.value.length()/Math.sqrt(3);}
  };
 }
 

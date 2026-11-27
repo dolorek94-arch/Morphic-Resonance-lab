@@ -1,5 +1,13 @@
 # Development status 2026-11-27
 
+## Desktop-only update 0.7.1
+
+The user selected PC-only development on 2026-11-27. Touch controls, joystick and the mobile rendering profile are removed from the current application. Archived 0.1–0.6 stay unchanged. Current desktop rendering uses native device pixel ratio, with 80 steps in the form lab and 64 in landscape. Mouse drag is the supported fallback for embedded browsers that deny Pointer Lock.
+
+The user supplied a screenshot of a completed 0.7.0 landscape measurement: high quality, 1090×643 canvas at pixel ratio 1, viewport 1105×893, 10,799 frames over about 60.001 s. Rounded results: 179.98 FPS, mean 5.556 ms, p50 5.6 ms, p95 5.6 ms, p99 5.7 ms, 52 draw calls, 52,308 triangles, 139 geometries and 1 texture. Source: user screenshot in the project conversation. This confirms a completed user-run render/capture at that viewport; it does not establish full-HD/1440p performance or GPU utilization. The screenshot also confirms that Pointer Lock was unavailable in the embedded browser.
+
+Current acceptance scope is desktop only: verify both scenes, mouse/keyboard navigation and drag fallback, depth/near-plane behavior and collisions; then measure larger desktop viewports and external GPU utilization/VRAM. The earlier iPhone/mobile requirements below are historical and superseded. 0.7.1 removes the quality button and reports actual drawing-buffer dimensions. PowerShell setup instructions now call Node directly to avoid npm.ps1 execution-policy errors.
+
 ## Verified starting point
 
 Upstream main was inspected through GitHub: commit `9064bbe9ccf1598aa2903efa9525d7464ad9881a`. It contained README.md, index.html and v01.html–v05.html, with no AGENTS.md or build tooling. The source matched the supplied handover.

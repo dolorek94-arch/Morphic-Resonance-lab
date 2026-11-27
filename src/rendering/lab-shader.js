@@ -1,30 +1,58 @@
-// One continuous implicit field: changing smooth-union width joins and separates bodies.
+// Local smooth unions attach slim curved necks without inflating the whole cluster.
 export const labFragment=`
 varying vec3 world;
 uniform mat4 projectionMatrix;
 uniform vec3 center,displacement,memory,activity;
-uniform vec2 bridges;
+uniform vec4 neckStart[8],neckEnd[8];
 uniform float clock,glow;
 
 float sm(float a,float b,float k){
  float h=clamp(.5+.5*(b-a)/k,0.,1.);
  return mix(b,a,h)-k*h*(1.-h);
 }
-float body(vec3 p,float x,float e,float m,vec3 aspect,float stretch){
+float body(vec3 p,int kind,float x,float e,float m,vec3 aspect){
  vec3 q=p-vec3(x,.20*e+.12*m,0.);
- q.x+=.12*e*q.y;
- q.y+=.065*e*sin(q.z*3.+q.x*2.);
- // Memory makes asymmetric lobes after the immediate oscillation has faded.
+ if(kind==0){
+  // Soft bean: rounded, off-axis and visibly yielding.
+  q.x+=.16*sin(q.y*2.4)+.17*e*q.y;
+  q.z+=.06*m*sin(q.y*2.);
+ }else if(kind==1){
+  // Dense core: compact rounded block; less stretch than the soft body.
+  q.x+=.045*sin(q.y*7.);
+  q.x+=.035*e*q.y;
+ }else{
+  // Thin membrane: tapered leaf with a bent tip and longer-lived folds.
+  q.x+=.16*q.y*q.y+.12*m*q.y;
+  q.z+=.09*m*sin(q.y*3.)+.055*e*q.y;
+ }
+ float softness=kind==1?.09:.24;
+ float retention=kind==1?.09:.22;
+ vec3 scale=aspect*vec3(1.,1.+softness*e+retention*m,1.+.10*m);
+ if(kind==2)scale.x*=clamp(1.-.18*q.y,.65,1.25);
+ vec3 u=abs(q/scale);
+ float norm=kind==1?sqrt(sqrt(dot(u*u,u*u))):length(u);
  float scar=.16*m*exp(-dot(q-vec3(.35,.25,0.),q-vec3(.35,.25,0.))*2.);
- vec3 scale=aspect*vec3(1.+stretch,1.+.24*e+.22*m,1.+.1*m);
- float d=(length(q/scale)-(.83+scar))*min(scale.x,min(scale.y,scale.z));
- return d+.018*sin(q.x*5.)*sin(q.y*4.)*sin(q.z*5.);
+ float radius=kind==1?.76:.83;
+ float d=(norm-radius-scar)*min(scale.x,min(scale.y,scale.z));
+ return d+.012*sin(q.x*5.)*sin(q.y*4.)*sin(q.z*5.);
+}
+float taperedNeck(vec3 p,vec4 a,vec4 b){
+ vec3 axis=b.xyz-a.xyz;
+ float h=clamp(dot(p-a.xyz,axis)/max(dot(axis,axis),.000001),0.,1.);
+ return length(p-mix(a.xyz,b.xyz,h))-mix(a.w,b.w,h);
 }
 float field(vec3 p){
- float a=body(p,-2.8,displacement.x,memory.x,vec3(1.,1.15,1.),.14*bridges.x);
- float b=body(p,0.,displacement.y,memory.y,vec3(1.05,.88,1.05),.08*(bridges.x+bridges.y));
- float c=body(p,2.8,displacement.z,memory.z,vec3(.95,1.35,.9),.14*bridges.y);
- return sm(sm(a,b,.06+2.8*bridges.x),c,.06+2.8*bridges.y);
+ float a=body(p,0,-2.8,displacement.x,memory.x,vec3(1.,1.15,1.));
+ float b=body(p,1,0.,displacement.y,memory.y,vec3(1.05,.88,1.05));
+ float c=body(p,2,2.8,displacement.z,memory.z,vec3(1.,1.4,.55));
+ float d=sm(sm(a,b,.06),c,.06);
+ for(int i=0;i<8;i++){
+  // Each set of four segments is confined to its neighboring half of the cluster.
+  if(neckStart[i].w>0. && ((i<4&&p.x<.65)||(i>=4&&p.x>-.65))){
+   d=sm(d,taperedNeck(p,neckStart[i],neckEnd[i]),.14);
+  }
+ }
+ return d;
 }
 vec3 normalAt(vec3 p){
  vec2 e=vec2(.008,0.);
@@ -44,8 +72,8 @@ void main(){
  for(int j=0;j<STEPS;j++){
   p=ro+rd*travel;
   float d=field(p);
-  if(abs(d)<.008){hit=true;break;}
-  travel+=max(.004,abs(d)*.55);
+  if(abs(d)<.007){hit=true;break;}
+  travel+=max(.003,abs(d)*.45);
   if(travel>exitDistance)break;
  }
  if(!hit||travel>exitDistance)discard;
@@ -53,11 +81,14 @@ void main(){
  vec3 weights=exp(-vec3(abs(p.x+2.8),abs(p.x),abs(p.x-2.8))*1.8);
  weights/=dot(weights,vec3(1.));
  vec3 base=weights.x*vec3(.32,.55,.49)+weights.y*vec3(.51,.32,.20)+weights.z*vec3(.40,.48,.64);
- float diffuse=max(0.,dot(n,normalize(vec3(-.5,.8,.6))));
+ vec3 lightDir=normalize(vec3(-.5,.8,.6));
+ float diffuse=max(0.,dot(n,lightDir));
  float rim=pow(1.-max(0.,dot(n,-rd)),3.);
  float remembered=dot(weights,memory);
- float roughness=.94+.06*sin(p.x*11.)*sin(p.y*13.)*sin(p.z*9.);
- vec3 col=base*(.29+1.05*diffuse)*roughness+rim*vec3(.08,.11,.13);
+ float grain=sin(p.x*11.)*sin(p.y*13.)*sin(p.z*9.);
+ float roughness=1.-(.025*weights.x+.075*weights.y+.015*weights.z)*(1.-grain);
+ float shine=pow(max(0.,dot(n,normalize(lightDir-rd))),24.)*(.10*weights.x+.025*weights.y+.20*weights.z);
+ vec3 col=base*(.29+1.05*diffuse)*roughness+rim*vec3(.08,.11,.13)+shine*vec3(.5,.55,.6);
  col+=remembered*vec3(.035,.025,.015);
  float vein=pow(1.-abs(sin(p.y*6.+p.x*3.+sin(p.z*4.))),14.);
  col+=glow*vein*(.05+.32*dot(weights,activity))*vec3(.15,.65,.58);

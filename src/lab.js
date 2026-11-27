@@ -1,6 +1,7 @@
 import {implicitVertex} from './rendering/shaders.js';
 import {labFragment} from './rendering/lab-shader.js';
 import {LAB_MATERIALS,updateLabState,resetLabState} from './lab-state.js';
+import {createNeckGeometry,updateNeckGeometry} from './neck-geometry.js';
 export function createLab(T,scene,r,shared,camera){
  scene.background=new T.Color(0x17212a);
  scene.fog=new T.FogExp2(0x17212a,.025);
@@ -16,10 +17,11 @@ export function createLab(T,scene,r,shared,camera){
  for(const b of bonds){b.mesh=new T.Object3D();b.activation=0;}
  // Collision covers the maximum joining envelope, including space between bodies.
  const colliders=[{type:'box',minX:-4.25,maxX:4.25,minZ:-8.5,maxZ:-5.5,minY:.1,maxY:4.7}];
+ const necks=createNeckGeometry();
  const uniforms={
   clock:shared.clock,center:{value:center},projectionMatrix:{value:camera.projectionMatrix},
   displacement:{value:new T.Vector3()},memory:{value:new T.Vector3()},
-  activity:{value:new T.Vector3()},bridges:{value:new T.Vector2()},glow:{value:0}
+  activity:{value:new T.Vector3()},neckStart:{value:necks.start},neckEnd:{value:necks.end},glow:{value:0}
  };
  const material=new T.ShaderMaterial({defines:{STEPS:96},uniforms,side:T.BackSide,vertexShader:implicitVertex,fragmentShader:labFragment});
  const proxy=new T.Mesh(new T.BoxGeometry(9.6,6,5.4),material);proxy.position.copy(center);scene.add(proxy);
@@ -31,10 +33,10 @@ export function createLab(T,scene,r,shared,camera){
   reset(){resetLabState(living,bonds);},
   update(dt=0,glow=false){
    updateLabState(living,bonds,dt);
+   updateNeckGeometry(necks,living,bonds);
    uniforms.displacement.value.set(...living.map(n=>Math.tanh(n.e)));
    uniforms.memory.value.set(...living.map(n=>n.memory));
    uniforms.activity.value.set(...living.map(n=>n.activity));
-   uniforms.bridges.value.set(...bonds.map(b=>b.activation));
    uniforms.glow.value=glow?1:0;
   }
  };

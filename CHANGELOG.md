@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.1 form-language development candidate
+
+Slim, curved, tapered necks grow from opposing body interiors instead of swelling the entire cluster. A-B and B-C use different bend directions. Soft bean, dense rounded block and thin tapered membrane silhouettes distinguish the three materials; shading varies by material. The user-confirmed reversible lifecycle remains unchanged.
+
+15 Node tests pass, including neck growth/retraction, midpoint connection, taper, asymmetric curves and bounds. Initial local browser validation observed distinct forms, thin connected necks, subsequent separation and reset without captured console warnings/errors at 1265×518. User style acceptance, depth edge cases and a new larger-resolution performance capture remain pending.
+
 ## 0.8.0 form-first development candidate
 
 Default to the focused three-body lab. Targeted impulses, material-specific oscillator response, delayed neighbor excitation, decaying deformation memory and activation-driven smooth-union connections. Emission starts disabled; optional comparison toggle and per-body reaction/memory indicators. The landscape remains at ?scene=world. Strength now scales real excitation, and benchmark capture fixes target A and emission off.

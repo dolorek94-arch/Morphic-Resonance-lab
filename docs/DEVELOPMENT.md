@@ -1,5 +1,15 @@
 # Development status 2026-11-27
 
+## Form-language refinement 0.8.1
+
+User feedback confirms the 0.8 sequence: separate bodies merge after excitation, separate again, and return to their original shapes. This is the accepted behavioral baseline.
+
+The next candidate replaces broad activation-dependent unions with narrow curved, tapered tendrils. Each pair grows two halves from the body interiors; the halves meet at the midpoint and retract as connection activation decays. A-B sags forward, B-C arches backward. Endpoint radius is about .32 and midpoint radius .13 before memory adjustment. Local smooth unions attach the necks without inflating the entire group. The shared endpoint/radius payload is generated in src/neck-geometry.js and sent to the shader as two vec4 arrays.
+
+Material A now has an asymmetric bean-like outline and more yielding shear; B has a compact rounded-block norm, restrained deformation and stronger matte grain; C is a tapered, thinner membrane with a bent tip and longer-lived folds. Lighting adds restrained material-dependent highlights. Emission remains optional and off by default. Simulation/material coefficients and the verified reversible lifecycle are unchanged.
+
+Validation: 15 Node tests and syntax checks pass. New tests verify absent/retracted neck payloads, separated early growth, meeting endpoints at full growth, pinched middle radii, opposite bend directions and proxy containment under strong excitation and memory. These tests validate generated geometry data and numerical behavior. A subsequent local in-app browser run at 1265×518 drawing-buffer resolution successfully rendered 0.8.1 with no captured warning/error console entries. Resting material silhouettes, targeted pulse response, thin connected necks, their later disappearance and a reset to zero reaction/memory were observed. This confirms initial shader/render behavior at that view; extreme camera angles, near-plane/depth edge cases and a new 60-second performance capture at larger desktop resolutions remain untested. The shader now evaluates additional neck segments, so 0.8 performance readings must not be reused as 0.8.1 measurements.
+
 ## Form-first laboratory 0.8.0
 
 The default entry now opens the focused form lab; ?scene=world retains the landscape and ?scene=lab explicitly selects the lab. Three material profiles replace identical autonomous oscillators in the lab: A is soft and fast, B is dense and more damped, C retains deformation memory longer. The lab has no idle forcing. A selected impulse changes only the target body's velocity; transfer is produced by coupled integration.

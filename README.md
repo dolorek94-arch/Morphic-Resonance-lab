@@ -20,11 +20,11 @@ WASD moves relative to the camera. Click the canvas to capture the mouse, Escape
 
 ## Form laboratory
 
-Select a target material (A soft, B dense, C long memory) and send an impulse. Only the selected body is directly excited. Observe delayed neighbor response and the necks that grow and recede between bodies. The meters show reaction and retained memory. Emission is off by default; toggle it only for comparison. Reset clears the full experiment. Visual acceptance of 0.8 is still pending.
+Select a target material (A soft, B dense, C long memory) and send an impulse. Only the selected body is directly excited. Observe delayed neighbor response and the slim curved necks that grow from both body interiors and recede. A is bean-shaped, B a dense rounded block, C a thin tapered membrane. The meters show reaction and retained memory. Emission is off by default; toggle it only for comparison. Reset clears the full experiment. The user confirmed merging, separation and return to rest in 0.8. The refined 0.8.1 forms, thin connections and retraction have been observed in a local browser without captured console errors; user style feedback and larger-resolution performance checks remain pending.
 
 ## Development status
 
-0.8.0 is a desktop development candidate. Twelve Node tests pass. User-run 0.7.0 and 0.7.1 landscape captures are documented in docs/DEVELOPMENT.md; full graphical acceptance remains pending. Read [development status](docs/DEVELOPMENT.md) for evidence, limitations and the remaining acceptance checks. Do not equate numerical tests with full graphical acceptance.
+0.8.1 is a desktop development candidate. Fifteen Node tests pass. User-run 0.7.0 and 0.7.1 landscape captures are documented in docs/DEVELOPMENT.md; full graphical acceptance remains pending. Read [development status](docs/DEVELOPMENT.md) for evidence, limitations and the remaining acceptance checks. Do not equate numerical tests with full graphical acceptance.
 
 The original 0.6 remains at `v06.html`, alongside archives 0.1–0.5. GitHub Pages continues to serve the root of main; this development work should be reviewed before main is updated.
 

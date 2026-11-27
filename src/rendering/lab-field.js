@@ -1,5 +1,12 @@
-// Shared by camera surfaces, ground shadows and ambient occlusion.
-export const labUniforms="varying vec3 world;\nuniform mat4 projectionMatrix;\nuniform vec3 center,displacement,memory,activity;\nuniform vec4 neckStart[8],neckEnd[8];\nuniform vec3 halfBounds,lightDirection,keyTint,skyTint;\nuniform float clock,glow,shadowEnabled,shadowSoftness,shadowBias;\n";
+import {NECK_SEGMENTS,SEGMENTS_PER_BOND} from '../neck-geometry.js';
+// One form field is reused by surface rays, ground shadows and ambient occlusion.
+export const labUniforms=`varying vec3 world;
+uniform mat4 projectionMatrix;
+uniform vec3 center,displacement,memory,activity;
+uniform vec4 neckStart[${NECK_SEGMENTS}],neckEnd[${NECK_SEGMENTS}];
+uniform vec3 halfBounds,lightDirection,keyTint,skyTint;
+uniform float clock,glow,shadowEnabled,shadowSoftness,shadowBias;
+`;
 export const labField=`
 float sm(float a,float b,float k){
  float h=clamp(.5+.5*(b-a)/k,0.,1.);
@@ -41,12 +48,14 @@ float field(vec3 p){
  float b=body(p,1,0.,displacement.y,memory.y,vec3(1.05,.88,1.05));
  float c=body(p,2,2.8,displacement.z,memory.z,vec3(1.,1.4,.55));
  float d=sm(sm(a,b,.06),c,.06);
- for(int i=0;i<8;i++){
-  // Each set of four segments is confined to its neighboring half of the cluster.
-  if(neckStart[i].w>0. && ((i<4&&p.x<.65)||(i>=4&&p.x>-.65))){
-   d=sm(d,taperedNeck(p,neckStart[i],neckEnd[i]),.14);
+ float leftNeck=1000.,rightNeck=1000.;
+ for(int i=0;i<${NECK_SEGMENTS};i++){
+  // Each neck's segments share a small union before attachment to the bodies.
+  if(neckStart[i].w>0. && ((i<${SEGMENTS_PER_BOND}&&p.x<.65)||(i>=${SEGMENTS_PER_BOND}&&p.x>-.65))){
+   float segment=taperedNeck(p,neckStart[i],neckEnd[i]);
+   if(i<${SEGMENTS_PER_BOND})leftNeck=sm(leftNeck,segment,.025);else rightNeck=sm(rightNeck,segment,.025);
   }
  }
- return d;
+ return sm(sm(d,leftNeck,.14),rightNeck,.14);
 }
 `;

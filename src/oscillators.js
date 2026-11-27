@@ -9,7 +9,7 @@ export function integrate(nodes,bonds,dt,time){
    acc[b.i]+=force;acc[b.j]-=force;
   }
   nodes.forEach((n,i)=>{
-   n.v+=acc[i]*h;n.e+=n.v*h;
+   n.v+=acc[i]*h/(n.mass??1);n.e+=n.v*h;
    n.memory=Math.min(1,n.memory*Math.exp(-h*(n.memoryDecay??.18))+Math.abs(n.e)*h*(n.memoryGain??.32));
   });
  }

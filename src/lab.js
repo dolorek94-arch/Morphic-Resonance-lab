@@ -4,6 +4,7 @@ import {labFloorFragment} from './rendering/lab-floor.js';
 import {LAB_HALF_BOUNDS,LAB_LIGHTING} from './lab-lighting-config.js';
 import {LAB_MATERIALS,updateLabState,resetLabState} from './lab-state.js';
 import {createNeckGeometry,updateNeckGeometry} from './neck-geometry.js';
+import {createTransport} from './transport.js';
 export function createLab(T,scene,r,shared,camera){
  scene.background=new T.Color(0x17212a);
  scene.fog=new T.FogExp2(0x17212a,.025);
@@ -15,6 +16,7 @@ export function createLab(T,scene,r,shared,camera){
  });
  const bonds=[{a:living[0],b:living[1],i:0,j:1,d:2.8,coupling:8},{a:living[1],b:living[2],i:1,j:2,d:2.8,coupling:8}];
  for(const b of bonds){b.mesh=new T.Object3D();b.activation=0;}
+ const transport=createTransport(living,bonds);
  // Collision covers the maximum joining envelope, including space between bodies.
  const colliders=[{type:'box',minX:-4.25,maxX:4.25,minZ:-8.5,maxZ:-5.5,minY:.1,maxY:4.7}];
  const necks=createNeckGeometry();
@@ -36,10 +38,11 @@ export function createLab(T,scene,r,shared,camera){
  const motes=new T.Object3D();
  return {
   living,bonds,motes,implicitUniforms:[],colliders,targeted:true,groundHeight:()=>0,
-  reset(){resetLabState(living,bonds);},
-  update(dt=0,glow=false,shadows=true){
+  integrate:transport.integrate,
+  reset(){resetLabState(living,bonds);transport.reset();},
+  update(dt=0,glow=false,shadows=true,held=false){
    updateLabState(living,bonds,dt);
-   updateNeckGeometry(necks,living,bonds);
+   updateNeckGeometry(necks,living,bonds,{held});
    uniforms.displacement.value.set(...living.map(n=>Math.tanh(n.e)));
    uniforms.memory.value.set(...living.map(n=>n.memory));
    uniforms.activity.value.set(...living.map(n=>n.activity));

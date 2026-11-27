@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.0 travelling-wave development candidate
+
+Replaced direct lab coupling with eight-cell spring chains. Local simulated displacement/velocity now drive moving neck bulges, pinches and bends; materials influence downstream and returning response. Added held-connection Wellentest (default) and .35-speed slow motion, retaining automatic growth/retraction when held mode is off. Increased neck detail to 16 total segments, shared with shadows; reduced stationary junction swelling.
+
+23 Node tests and syntax checks pass. Browser checks observed delayed response, changing neck profiles, held/automatic mode and matching shadows without captured console warnings/errors. The 60-second held-neck/shadow capture at 2545×940 completed at 179.979 FPS, mean 5.556 ms, p99 5.7 ms; full JSON is in docs/benchmarks/2026-11-27-lab-0.9.0-waves.json. Conditions and model limitations are documented in docs/DEVELOPMENT.md.
+
 ## 0.8.2 lighting development candidate
 
 Raymarched ground shadows and surface self-shadowing trace the same dynamic form field as the bodies, including slim necks. Shared light direction/tints and restrained ambient occlusion improve depth cues. Added a direct-shadow comparison toggle; lab benchmark capture fixes shadows on. The landscape path is unchanged.

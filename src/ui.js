@@ -5,7 +5,7 @@ export function createUI({pulse,reset,benchmark,lab}){
  $('pulse').onclick=pulse;$('reset').onclick=reset;$('benchmark').onclick=benchmark;
  $('lab-controls').hidden=!lab;
  $('scene-note').textContent=lab
-  ? 'Drei Materialien, ein gemeinsames Formfeld für Körper und Schatten. Impulsziel wählen und Resonanzimpuls auslösen. Schatten lassen sich zum Vergleich ausschalten; Leuchten startet ausgeschaltet.'
+  ? 'Wellentest: Ein Impuls läuft durch die Hälse zum nächsten Material. Verbindungen halten zeigt die Welle auf bestehenden Hälsen; ausgeschaltet wachsen und vergehen die Hälse automatisch. Leuchten startet ausgeschaltet.'
   : 'Archivierte Versuchsanordnung der Landschaft. Das neue Resonanzverhalten wird zuerst im Formlabor entwickelt.';
  let nextStatus=0;
  return {
@@ -13,6 +13,8 @@ export function createUI({pulse,reset,benchmark,lab}){
   target:()=>+$('target').value,
   glow:()=>$('glow').checked,
   shadows:()=>$('shadows').checked,
+  held:()=>$('held').checked,
+  slow:()=>$('slow').checked,
   status(fps,ms,info,nodes){
    const now=performance.now();if(now<nextStatus)return;nextStatus=now+200;
    $('status').textContent=VERSION+' · '+Math.round(fps)+' FPS · '+ms.toFixed(1)+' ms · '+info.render.calls+' Draws';

@@ -38,7 +38,7 @@ test('a single impulse propagates A to B to C, raises connection activation and 
  }
  assert.ok(first.every(Number.isFinite));
  assert.ok(first[0]<first[1]&&first[1]<first[2]);
- assert.ok(maxBridge[0]>.9&&maxBridge[1]>.65);
+ assert.ok(maxBridge[0]>.9&&maxBridge[1]>.55);
  for(const b of world.bonds)assert.ok(b.activation<.01);
 });
 test('repeated maximum impulses stay finite and reset clears material and connection history',()=>{

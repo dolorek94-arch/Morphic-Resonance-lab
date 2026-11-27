@@ -3,7 +3,7 @@ export function createSimulation(T,world){
  const {living,bonds,motes,implicitUniforms}=world;
  const axis=new T.Vector3(0,1,0),delta=new T.Vector3(),unit=new T.Vector3();
  function evolve(dt,time){
-  integrate(living,bonds,dt,time);
+  if(world.integrate)world.integrate(dt,time);else integrate(living,bonds,dt,time);
   for(const n of living){
    const e=Math.tanh(n.e),m=n.memory;
    n.mesh.scale.set(1+.22*e+.18*m,1+.35*e+.35*m,1+.22*e+.18*m);

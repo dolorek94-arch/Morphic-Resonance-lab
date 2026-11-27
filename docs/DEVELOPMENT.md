@@ -1,5 +1,23 @@
 # Development status 2026-11-27
 
+## Spatial transport and travelling form waves 0.9.0
+
+The user accepted 0.8.2 shadows as visually plausible and appropriately attached to the objects. Version 0.9 keeps that shared-field lighting while replacing direct lab-body coupling with a one-dimensional spring chain along each neck.
+
+Each link has eight cells (seven internal masses), shared endpoint bodies, spring coefficient 12 and internal mass .2. Internal damping is .09 and weak restoring stiffness .15. Existing endpoint material coefficients remain. The generic integrator now supports optional mass, with mass 1 preserving the landscape path. A targeted impulse still changes only the selected body at injection; all other states respond through the graph. Standard strength-1 numerical sampling at displacement threshold .01 found B at about .96 simulation seconds and C at about 2.09 seconds; these are model observations, not physical material constants.
+
+Interpolated local displacement and velocity bend the neck and vary its radius. Geometry now uses eight tapered segments per link (16 total); the same arrays feed visible surfaces, normals and shadows. Radius is clamped to remain positive. Adjacent segments use a small within-neck union before one body attachment union to reduce stationary junction lumps.
+
+The default held-connection mode exposes the wave on already formed necks without light emission. Unchecking it restores the automatic growth/retraction envelope. A .35-speed slow-motion checkbox affects simulation only; navigation remains normal speed. Reset clears internal displacement, velocity and memory in addition to body state. Benchmarks force held connections, shadows on, emission off, normal simulation speed and target A.
+
+Automatic growth retains the original logical-neighbor assumption: numerical transport remains available on the latent chain even before the whole visible neck is built. No wave surface is rendered in gaps, but visibility is not an energy-aware physical connectivity constraint. Held mode is the reference for assessing travel. Physically gated attachment/fracture is outside this implementation.
+
+Validation: 23 Node tests pass. New tests check ordered internal-cell arrival and later body response, fixed-graph mechanical energy decay, downstream-stiffness influence on later upstream response, spatially varying held-neck geometry, 30/60/180 Hz consistency and full internal reset. Existing automatic connection, memory, impulse stress, shadow-data and navigation checks remain green. The weaker attenuated second-link activation is expected under the new chain, so its regression bound changed from .65 to .55; a standard impulse reaches approximately .62 and still closes the neck.
+
+The local browser showed held necks at rest, automatic-mode separation, slow-motion excitation with A reacting before B/C, spatial neck thickening/bending and matching shadows without captured warning/error console entries. The final 60-second run at 2545×940 (viewport 2560×1305, pixel ratio 1) completed with 10,799 frames / 60,001.3 ms: 179.979 FPS, mean 5.556 ms, p50/p95 5.6 ms and p99 5.7 ms. Conditions: held connections, shadows on, emission off, normal simulation speed, one impulse into A after 1 simulation second. Full JSON: docs/benchmarks/2026-11-27-lab-0.9.0-waves.json. No warning/error console entries were captured. The browser also observed C-target excitation followed by B/A reaction and a successful full reset. Frame intervals appear capped near 180 FPS and do not measure GPU cost; this single-impulse capture is not a sustained-excitation stress benchmark.
+
+Open visual checks: user judgement of travel readability, the smaller second-link wave, extreme camera angles and sustained multi-impulse GPU cost. Boundary response is a simplified damped mechanical model, not validated real-world physics.
+
 ## Shared-field lighting and shadows 0.8.2
 
 The user supplied 0.8.1 screenshots of separate and connected forms plus a completed 60-second capture at 2545×940: approximately 179.98 FPS, mean 5.56 ms and p99 5.7 ms. These results describe 0.8.1.

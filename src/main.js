@@ -35,7 +35,7 @@ async function start(){
    reset();input.clear();document.exitPointerLock?.();
    profiler.start({version:VERSION,scene:lab?'lab':'world',quality:'desktop-high',width:$('view').clientWidth,height:$('view').clientHeight,
     pixelRatio:r.getPixelRatio(),drawingBufferWidth:r.domElement.width,drawingBufferHeight:r.domElement.height,userAgent:navigator.userAgent,seed:CONFIG.seed,
-    viewport: {width:innerWidth,height:innerHeight},strength:1,target:lab?0:null,emission:false,pulseAtSimulationSecond:1});
+    viewport: {width:innerWidth,height:innerHeight},strength:1,target:lab?0:null,emission:false,shadows:lab,pulseAtSimulationSecond:1});
   }});
  new ResizeObserver(()=>{profiler.cancel();applySize();}).observe($('view'));
  document.addEventListener('visibilitychange',()=>{profiler.cancel();last=performance.now();});
@@ -47,7 +47,7 @@ async function start(){
    const previous=t;t+=dt;
    if(profiler.active&&previous<1&&t>=1)excite(1,lab?0:null);
    shared.clock.value=t;shared.age.value=t-imp;shared.strength.value=profiler.active?1:ui.strength();
-   simulation.evolve(dt,t);world.update?.(dt,profiler.active?false:ui.glow());
+   simulation.evolve(dt,t);world.update?.(dt,profiler.active?false:ui.glow(),profiler.active?true:ui.shadows());
    const axes=profiler.active?{right:0,forward:0}:input.axes();
    const yaw=profiler.active?spawn.yaw:input.state.yaw,pitch=profiler.active?spawn.pitch:input.state.pitch;
    const velocity=direction(yaw,axes.right,axes.forward);

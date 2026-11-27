@@ -1,0 +1,33 @@
+{
+  "version": "0.8.2",
+  "scene": "lab",
+  "quality": "desktop-high",
+  "width": 2545,
+  "height": 940,
+  "pixelRatio": 1,
+  "drawingBufferWidth": 2545,
+  "drawingBufferHeight": 940,
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36",
+  "seed": 71,
+  "viewport": {
+    "width": 2560,
+    "height": 1305
+  },
+  "strength": 1,
+  "target": 0,
+  "emission": false,
+  "shadows": true,
+  "pulseAtSimulationSecond": 1,
+  "frames": 10797,
+  "durationMs": 60001.3,
+  "fps": 179.94610116780802,
+  "meanMs": 5.557219598036492,
+  "p50Ms": 5.599999999991269,
+  "p95Ms": 5.600000000005821,
+  "p99Ms": 5.700000000004366,
+  "drawCalls": 2,
+  "triangles": 14,
+  "geometries": 2,
+  "textures": 0,
+  "note": "CPU wall-clock frame intervals; not GPU times. Geometry/texture values are counts, not bytes. GPU load, VRAM and device temperature require an external profiler."
+}

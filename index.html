@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Morphic Resonance Lab 0.8.1</title>
+  <title>Morphic Resonance Lab 0.8.2</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,16 +12,17 @@
    <div id="status" role="status">Lade Umgebung…</div>
   </div>
   <section aria-label="Laborsteuerung">
-   <b id="version">MORPHIC RESONANCE LAB / 0.8.1</b>
+   <b id="version">MORPHIC RESONANCE LAB / 0.8.2</b>
    <p id="hint">WASD: bewegen · Bild anklicken: Maus fangen · Escape: Maus freigeben · Leertaste: Impuls · R: Startpunkt. Mausfang nicht verfügbar? Linke Maustaste halten und ziehen.</p>
    <div class="controls"><button id="pulse">Resonanzimpuls</button><button id="reset">Startpunkt</button><button id="benchmark">60 s messen</button></div>
    <p><label for="amp">Resonanzstärke</label><input id="amp" type="range" min="0" max="2" step=".1" value="1"></p>
-   <nav><a href="?scene=lab">Formlabor 0.8.1</a> · <a href="?scene=world">Landschaft</a> · <a href="v06.html">Archiv 0.6</a> · <a href="v05.html">Archiv 0.5</a></nav>
+   <nav><a href="?scene=lab">Formlabor 0.8.2</a> · <a href="?scene=world">Landschaft</a> · <a href="v06.html">Archiv 0.6</a> · <a href="v05.html">Archiv 0.5</a></nav>
    <p class="note" id="scene-note">Formlabor: Resonanz verändert Form und Materialgedächtnis.</p>
    <div id="lab-controls" hidden>
     <div class="controls"><label for="target">Impulsziel</label>
      <select id="target"><option value="0">A · weich</option><option value="1">B · dicht</option><option value="2">C · nachwirkend</option></select>
      <label class="check"><input id="glow" type="checkbox"> Leuchten zum Vergleich</label>
+     <label class="check"><input id="shadows" type="checkbox" checked> Schatten</label>
     </div>
     <div class="material-signals">
      <label>A · weich <meter id="signal0" min="0" max="1" value="0"></meter><span id="memory0"></span></label>

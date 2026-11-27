@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.2 lighting development candidate
+
+Raymarched ground shadows and surface self-shadowing trace the same dynamic form field as the bodies, including slim necks. Shared light direction/tints and restrained ambient occlusion improve depth cues. Added a direct-shadow comparison toggle; lab benchmark capture fixes shadows on. The landscape path is unchanged.
+
+17 Node tests and syntax checks pass. Browser checks observed resting/connected shadows and the comparison toggle without captured console warnings/errors. Completed 60-second capture with shadows at 2545×940: 179.946 FPS, mean 5.557 ms, p99 5.7 ms. Full JSON is in docs/benchmarks/2026-11-27-lab-0.8.2-shadows.json. GPU utilization was not measured.
+
 ## 0.8.1 form-language development candidate
 
 Slim, curved, tapered necks grow from opposing body interiors instead of swelling the entire cluster. A-B and B-C use different bend directions. Soft bean, dense rounded block and thin tapered membrane silhouettes distinguish the three materials; shading varies by material. The user-confirmed reversible lifecycle remains unchanged.

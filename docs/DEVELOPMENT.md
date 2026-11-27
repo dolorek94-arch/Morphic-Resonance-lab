@@ -1,5 +1,17 @@
 # Development status 2026-11-27
 
+## Shared-field lighting and shadows 0.8.2
+
+The user supplied 0.8.1 screenshots of separate and connected forms plus a completed 60-second capture at 2545×940: approximately 179.98 FPS, mean 5.56 ms and p99 5.7 ms. These results describe 0.8.1.
+
+Version 0.8.2 extracts one common GLSL form field for the body and ground materials. Ground shadow rays and surface self-shadow rays trace that same current field, including neck segment positions/radii, signed deformation and decaying memory. Conservative local box intersections avoid marching rays that miss the group. Soft penumbrae are an approximation with fixed step budgets (48 surface / 72 floor), bias .035 and shared normalized light direction. This is local raymarched visibility, not a Three.js shadow map or a physically validated light transport model.
+
+The floor and bodies share key-light and sky-fill colors. Three short normal samples add restrained ambient occlusion in tight regions. The new Shadows checkbox starts enabled and toggles direct shadow visibility; ambient occlusion stays enabled. Benchmark capture forces shadows on in the lab, emission off and target A. The older landscape rendering path is unchanged.
+
+Validation: 17 Node tests and authored-JavaScript syntax checks pass. Integration tests verify identical live field uniform references across camera/floor materials, updating neck/deformation data after excitation, normalized light direction, matching proxy bounds and switching shadows without changing neck geometry. A local browser rendered resting shadows, connected neck shadows and the off comparison without captured warning/error console entries. Initial small-viewport readings are not benchmarks. The matched-size 60-second run completed with shadows enabled at 2545×940, pixel ratio 1, viewport 2560×1305: 10,797 frames / 60,001.3 ms, 179.946 FPS, mean 5.557 ms, p50/p95 5.6 ms and p99 5.7 ms. No warning/error console entries were captured. Full result: docs/benchmarks/2026-11-27-lab-0.8.2-shadows.json. These capped-looking frame intervals do not measure GPU workload or imply zero extra GPU cost. The capture uses one impulse after 1 simulation second and mostly measures the subsequent idle state; sustained repeated excitation still needs profiling.
+
+Remaining checks: user style feedback, extreme viewpoints/near-plane cases, grazing thin-neck shadow precision and longer sustained excitation. The fixed-budget secondary rays and soft-shadow heuristic may miss fine grazing detail; no GPU time, utilization, VRAM bytes or temperature is inferred from frame intervals.
+
 ## Form-language refinement 0.8.1
 
 User feedback confirms the 0.8 sequence: separate bodies merge after excitation, separate again, and return to their original shapes. This is the accepted behavioral baseline.

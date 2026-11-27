@@ -1,12 +1,12 @@
 import {implicitVertex} from './rendering/shaders.js';
 import {labFragment} from './rendering/lab-shader.js';
+import {labFloorFragment} from './rendering/lab-floor.js';
+import {LAB_HALF_BOUNDS,LAB_LIGHTING} from './lab-lighting-config.js';
 import {LAB_MATERIALS,updateLabState,resetLabState} from './lab-state.js';
 import {createNeckGeometry,updateNeckGeometry} from './neck-geometry.js';
 export function createLab(T,scene,r,shared,camera){
  scene.background=new T.Color(0x17212a);
  scene.fog=new T.FogExp2(0x17212a,.025);
- const floor=new T.Mesh(new T.PlaneGeometry(36,36),new T.MeshStandardMaterial({color:0x313c40,roughness:1}));
- floor.rotation.x=-Math.PI/2;scene.add(floor);
  const center=new T.Vector3(0,1.9,-7);
  const living=[-2.8,0,2.8].map((x,i)=>{
   const mesh=new T.Object3D();mesh.position.copy(center).add(new T.Vector3(x,0,0));
@@ -21,23 +21,30 @@ export function createLab(T,scene,r,shared,camera){
  const uniforms={
   clock:shared.clock,center:{value:center},projectionMatrix:{value:camera.projectionMatrix},
   displacement:{value:new T.Vector3()},memory:{value:new T.Vector3()},
-  activity:{value:new T.Vector3()},neckStart:{value:necks.start},neckEnd:{value:necks.end},glow:{value:0}
+  activity:{value:new T.Vector3()},neckStart:{value:necks.start},neckEnd:{value:necks.end},glow:{value:0},
+  halfBounds:{value:new T.Vector3().fromArray(LAB_HALF_BOUNDS)},
+  lightDirection:{value:new T.Vector3().fromArray(LAB_LIGHTING.direction).normalize()},
+  keyTint:{value:new T.Vector3().fromArray(LAB_LIGHTING.keyTint)},
+  skyTint:{value:new T.Vector3().fromArray(LAB_LIGHTING.skyTint)},
+  shadowEnabled:{value:1},shadowSoftness:{value:LAB_LIGHTING.shadowSoftness},shadowBias:{value:LAB_LIGHTING.shadowBias}
  };
- const material=new T.ShaderMaterial({defines:{STEPS:96},uniforms,side:T.BackSide,vertexShader:implicitVertex,fragmentShader:labFragment});
- const proxy=new T.Mesh(new T.BoxGeometry(9.6,6,5.4),material);proxy.position.copy(center);scene.add(proxy);
- scene.add(new T.HemisphereLight(0xb9d4e0,0x252b2e,1.25));
- const sun=new T.DirectionalLight(0xffd7ad,2.4);sun.position.set(-6,9,5);scene.add(sun);
+ const material=new T.ShaderMaterial({defines:{STEPS:96,SHADOW_STEPS:LAB_LIGHTING.surfaceSteps},uniforms,side:T.BackSide,vertexShader:implicitVertex,fragmentShader:labFragment});
+ const proxy=new T.Mesh(new T.BoxGeometry(...LAB_HALF_BOUNDS.map(v=>v*2)),material);proxy.position.copy(center);scene.add(proxy);
+ const floorMaterial=new T.ShaderMaterial({defines:{SHADOW_STEPS:LAB_LIGHTING.floorSteps},uniforms,vertexShader:implicitVertex,fragmentShader:labFloorFragment});
+ const floor=new T.Mesh(new T.PlaneGeometry(36,36),floorMaterial);
+ floor.rotation.x=-Math.PI/2;scene.add(floor);
  const motes=new T.Object3D();
  return {
   living,bonds,motes,implicitUniforms:[],colliders,targeted:true,groundHeight:()=>0,
   reset(){resetLabState(living,bonds);},
-  update(dt=0,glow=false){
+  update(dt=0,glow=false,shadows=true){
    updateLabState(living,bonds,dt);
    updateNeckGeometry(necks,living,bonds);
    uniforms.displacement.value.set(...living.map(n=>Math.tanh(n.e)));
    uniforms.memory.value.set(...living.map(n=>n.memory));
    uniforms.activity.value.set(...living.map(n=>n.activity));
    uniforms.glow.value=glow?1:0;
+   uniforms.shadowEnabled.value=shadows?1:0;
   }
  };
 }

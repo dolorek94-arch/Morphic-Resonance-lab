@@ -58,4 +58,3 @@ test('repeated maximum impulses stay finite and reset clears material and connec
  for(const n of world.living)assert.equal(n.activity,0);
  for(const b of world.bonds)assert.equal(b.activation,0);
 });
-

@@ -15,7 +15,7 @@ for(const [name,factory,count] of [['world',createWorld,75],['lab',createLab,3]]
   const {scene,camera,world}=setup(factory);
   assert.equal(world.living.length,count);
   const sim=createSimulation(T,world);sim.impulse(0,0);
-  for(let i=1;i<=600;i++)sim.evolve(1/60,i/60);
+  for(let i=1;i<=600;i++){sim.evolve(1/60,i/60);world.update?.(1/60,false);}
   world.update?.();
   scene.updateMatrixWorld(true);
   scene.traverse(o=>{

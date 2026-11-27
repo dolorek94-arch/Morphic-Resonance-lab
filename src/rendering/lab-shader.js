@@ -1,1 +1,71 @@
-export const labFragment="\n varying vec3 world;uniform mat4 projectionMatrix;uniform vec3 center;uniform vec3 energies;uniform float clock,energy,seed,age,strength;uniform vec2 origin;\n float sm(float a,float b,float k){float h=clamp(.5+.5*(b-a)/k,0.,1.);return mix(b,a,h)-k*h*(1.-h);}\n\n float capsule(vec3 p,vec3 a,vec3 b,float r){vec3 pa=p-a,ba=b-a;return length(pa-ba*clamp(dot(pa,ba)/dot(ba,ba),0.,1.))-r;}\n float field(vec3 p){\n  // Warped coordinates bend both bodies and their connections as one continuous field.\n  vec3 q=p;q.y+=.14*sin(p.x*1.6+clock*.7)*(1.+energy);\n  vec3 a=vec3(-2.,.12*sin(clock),0.),b=vec3(0.,.25,0.),c=vec3(2.,.12*cos(clock),0.);\n  float d=length((q-a)*vec3(1.,.8,1.))-(.72+.17*energies.x);\n  d=sm(d,length((q-b)*vec3(1.,.65,1.))-(.82+.17*energies.y),.48);\n  d=sm(d,length((q-c)*vec3(1.,.85,1.))-(.72+.17*energies.z),.48);\n  d=sm(d,capsule(q,a,b,.07+.28*min(energies.x,energies.y)),.42);\n  d=sm(d,capsule(q,b,c,.07+.28*min(energies.y,energies.z)),.42);\n  return d+.035*sin(p.x*7.+clock)*sin(p.y*6.)*sin(p.z*7.);\n }\n void main(){vec3 ro=cameraPosition-center,rd=normalize(world-cameraPosition);vec3 inv=1./rd;vec3 aa=(-vec3(4.5,3.,3.)-ro)*inv,bb=(vec3(4.5,3.,3.)-ro)*inv;vec3 lo=min(aa,bb),hi=max(aa,bb);float t=max(0.,max(lo.x,max(lo.y,lo.z))),end=min(hi.x,min(hi.y,hi.z));bool hit=false;vec3 p;for(int j=0;j<STEPS;j++){p=ro+rd*t;float d=field(p);if(d<.012){hit=true;break;}t+=max(.012,d*.65);if(t>end)break;}if(!hit||t>end)discard;vec2 e=vec2(.012,0.);vec3 n=normalize(vec3(field(p+e.xyy)-field(p-e.xyy),field(p+e.yxy)-field(p-e.yxy),field(p+e.yyx)-field(p-e.yyx)));float light=max(0.,dot(n,normalize(vec3(-.6,1.,-.4))));float vein=pow(1.-abs(sin(p.y*6.+p.x*3.+sin(p.z*4.))),12.);float front=length((p+center).xz-origin)-age*7.;float pulse=exp(-front*front*.14)*strength;vec3 base=mix(vec3(.055,.17,.23),vec3(.48,.22,.11),.5+.5*sin(seed));vec3 col=base*(.35+light*1.5)+vein*vec3(.12,.75,.9)*(.3+energy+pulse)+pow(1.-max(0.,dot(n,-rd)),3.)*vec3(.13,.25,.35);float groundFog=exp(-max(0.,(p+center).y)*.4);\n col=mix(col,vec3(.15,.23,.31),1.-exp(-t*t*.035*.035-t*.025*groundFog));gl_FragColor=vec4(col,1.);vec4 clip=projectionMatrix*viewMatrix*vec4(p+center,1.);gl_FragDepth=clip.z/clip.w*.5+.5;}\n ";
+// One continuous implicit field: changing smooth-union width joins and separates bodies.
+export const labFragment=`
+varying vec3 world;
+uniform mat4 projectionMatrix;
+uniform vec3 center,displacement,memory,activity;
+uniform vec2 bridges;
+uniform float clock,glow;
+
+float sm(float a,float b,float k){
+ float h=clamp(.5+.5*(b-a)/k,0.,1.);
+ return mix(b,a,h)-k*h*(1.-h);
+}
+float body(vec3 p,float x,float e,float m,vec3 aspect,float stretch){
+ vec3 q=p-vec3(x,.20*e+.12*m,0.);
+ q.x+=.12*e*q.y;
+ q.y+=.065*e*sin(q.z*3.+q.x*2.);
+ // Memory makes asymmetric lobes after the immediate oscillation has faded.
+ float scar=.16*m*exp(-dot(q-vec3(.35,.25,0.),q-vec3(.35,.25,0.))*2.);
+ vec3 scale=aspect*vec3(1.+stretch,1.+.24*e+.22*m,1.+.1*m);
+ float d=(length(q/scale)-(.83+scar))*min(scale.x,min(scale.y,scale.z));
+ return d+.018*sin(q.x*5.)*sin(q.y*4.)*sin(q.z*5.);
+}
+float field(vec3 p){
+ float a=body(p,-2.8,displacement.x,memory.x,vec3(1.,1.15,1.),.14*bridges.x);
+ float b=body(p,0.,displacement.y,memory.y,vec3(1.05,.88,1.05),.08*(bridges.x+bridges.y));
+ float c=body(p,2.8,displacement.z,memory.z,vec3(.95,1.35,.9),.14*bridges.y);
+ return sm(sm(a,b,.06+2.8*bridges.x),c,.06+2.8*bridges.y);
+}
+vec3 normalAt(vec3 p){
+ vec2 e=vec2(.008,0.);
+ return normalize(vec3(field(p+e.xyy)-field(p-e.xyy),field(p+e.yxy)-field(p-e.yxy),field(p+e.yyx)-field(p-e.yyx)));
+}
+void main(){
+ vec3 ro=cameraPosition-center,rd=normalize(world-cameraPosition);
+ vec3 safeDir=mix(vec3(-1.),vec3(1.),step(vec3(0.),rd))*max(abs(rd),vec3(.000001));
+ vec3 aa=(-vec3(4.8,3.,2.7)-ro)/safeDir;
+ vec3 bb=(vec3(4.8,3.,2.7)-ro)/safeDir;
+ vec3 lo=min(aa,bb),hi=max(aa,bb);
+ float travel=max(.001,max(lo.x,max(lo.y,lo.z)));
+ float exitDistance=min(hi.x,min(hi.y,hi.z));
+ if(travel>exitDistance)discard;
+ bool hit=false;
+ vec3 p=vec3(0.);
+ for(int j=0;j<STEPS;j++){
+  p=ro+rd*travel;
+  float d=field(p);
+  if(abs(d)<.008){hit=true;break;}
+  travel+=max(.004,abs(d)*.55);
+  if(travel>exitDistance)break;
+ }
+ if(!hit||travel>exitDistance)discard;
+ vec3 n=normalAt(p);
+ vec3 weights=exp(-vec3(abs(p.x+2.8),abs(p.x),abs(p.x-2.8))*1.8);
+ weights/=dot(weights,vec3(1.));
+ vec3 base=weights.x*vec3(.32,.55,.49)+weights.y*vec3(.51,.32,.20)+weights.z*vec3(.40,.48,.64);
+ float diffuse=max(0.,dot(n,normalize(vec3(-.5,.8,.6))));
+ float rim=pow(1.-max(0.,dot(n,-rd)),3.);
+ float remembered=dot(weights,memory);
+ float roughness=.94+.06*sin(p.x*11.)*sin(p.y*13.)*sin(p.z*9.);
+ vec3 col=base*(.29+1.05*diffuse)*roughness+rim*vec3(.08,.11,.13);
+ col+=remembered*vec3(.035,.025,.015);
+ float vein=pow(1.-abs(sin(p.y*6.+p.x*3.+sin(p.z*4.))),14.);
+ col+=glow*vein*(.05+.32*dot(weights,activity))*vec3(.15,.65,.58);
+ float fog=1.-exp(-travel*travel*.025*.025);
+ col=mix(col,vec3(.09,.13,.165),fog);
+ vec4 clip=projectionMatrix*viewMatrix*vec4(p+center,1.);
+ if(clip.w<=0.)discard;
+ gl_FragColor=vec4(col,1.);
+ gl_FragDepth=clamp(clip.z/clip.w*.5+.5,0.,1.);
+}
+`;

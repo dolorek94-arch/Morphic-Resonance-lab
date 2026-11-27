@@ -23,8 +23,13 @@ export function createSimulation(T,world){
   }
   motes.position.y=.3*Math.sin(time*.4);motes.rotation.y=time*.008;
  }
- return {evolve,impulse(x,z){
-  for(const n of living){const d=Math.hypot(n.base.x-x,n.base.z-z);n.v+=4*Math.exp(-d*.23);}
+ return {evolve,impulse(x,z,strength=1,target=null){
+  if(world.targeted){
+   const n=living[Number.isInteger(target)?target:0];
+   if(n)n.v=Math.max(-8,Math.min(8,n.v+4*strength));
+   return;
+  }
+  for(const n of living){const d=Math.hypot(n.base.x-x,n.base.z-z);n.v+=4*strength*Math.exp(-d*.23);}
  }};
 }
 

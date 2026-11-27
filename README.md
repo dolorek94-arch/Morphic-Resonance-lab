@@ -10,7 +10,7 @@ Requires Node.js 20.11 or newer (validated with 24.22.0).
 node scripts/serve.mjs
 ```
 
-Open http://localhost:8000/ for the landscape, or http://localhost:8000/?scene=lab for the connected SDF experiment. No npm install or build step is needed. Three.js r170 is vendored with its MIT license; the current application runs without a CDN. Archived versions still use their original CDN imports.
+Open http://localhost:8000/ (or ?scene=lab) for the form laboratory. The earlier landscape remains at http://localhost:8000/?scene=world. No npm install or build step is needed. Three.js r170 is vendored with its MIT license; the current application runs without a CDN. Archived versions still use their original CDN imports.
 
 ```powershell
 node --test
@@ -18,9 +18,13 @@ node --test
 
 WASD moves relative to the camera. Click the canvas to capture the mouse, Escape releases it. Space sends an impulse; R restores the starting state. When Pointer Lock is unavailable, hold the left mouse button and drag to look. Desktop is the only development target; touch input and the mobile quality profile have been removed.
 
+## Form laboratory
+
+Select a target material (A soft, B dense, C long memory) and send an impulse. Only the selected body is directly excited. Observe delayed neighbor response and the necks that grow and recede between bodies. The meters show reaction and retained memory. Emission is off by default; toggle it only for comparison. Reset clears the full experiment. Visual acceptance of 0.8 is still pending.
+
 ## Development status
 
-0.7.1 is a desktop development candidate. Eight Node tests pass. A user-run 0.7.0 landscape capture is documented in docs/DEVELOPMENT.md; full graphical acceptance remains pending. Read [development status](docs/DEVELOPMENT.md) for evidence, limitations and the remaining acceptance checks. Do not equate numerical tests with full graphical acceptance.
+0.8.0 is a desktop development candidate. Twelve Node tests pass. User-run 0.7.0 and 0.7.1 landscape captures are documented in docs/DEVELOPMENT.md; full graphical acceptance remains pending. Read [development status](docs/DEVELOPMENT.md) for evidence, limitations and the remaining acceptance checks. Do not equate numerical tests with full graphical acceptance.
 
 The original 0.6 remains at `v06.html`, alongside archives 0.1–0.5. GitHub Pages continues to serve the root of main; this development work should be reviewed before main is updated.
 
@@ -37,7 +41,7 @@ The original 0.6 remains at `v06.html`, alongside archives 0.1–0.5. GitHub Pag
 
 ## Profiling
 
-Select a scene, resize the browser, then press **60 s messen**. It resets simulation and camera, fixes resonance strength at 1, disables navigation during capture, and emits one impulse at simulation second 1. Leave the tab foregrounded. Resetting, resizing or hiding the tab cancels the capture.
+Select a scene, resize the browser, then press **60 s messen**. It resets simulation and camera, fixes resonance strength at 1, disables navigation during capture, fixes target A and emission off in the lab, and emits one impulse at simulation second 1. Leave the tab foregrounded. Resetting, resizing or hiding the tab cancels the capture.
 
 Compare 1920×1080 and 2560×1440 **browser viewport sizes** at the fixed desktop quality. Record canvas dimensions, drawing-buffer dimensions and pixel ratio separately. The canvas occupies part of the viewport. Results include mean/p50/p95/p99 frame intervals, average FPS, draw calls, triangles, and geometry/texture counts. GPU utilization, VRAM bytes and temperature require external tools; they are not inferred from FPS.
 

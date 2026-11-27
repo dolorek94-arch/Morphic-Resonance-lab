@@ -1,5 +1,19 @@
 # Development status 2026-11-27
 
+## Form-first laboratory 0.8.0
+
+The default entry now opens the focused form lab; ?scene=world retains the landscape and ?scene=lab explicitly selects the lab. Three material profiles replace identical autonomous oscillators in the lab: A is soft and fast, B is dense and more damped, C retains deformation memory longer. The lab has no idle forcing. A selected impulse changes only the target body's velocity; transfer is produced by coupled integration.
+
+The implicit field uses three individually deformed bodies with activation-dependent smooth-union widths. At rest the small union width leaves gaps; excitation increases blending to form necks, and decay separates the bodies again. Decaying memory affects size, asymmetry and surface lobes. Emission is off by default and can be toggled for comparison. The background/floor and lighting are deliberately subdued. A conservative collider protects the whole joining envelope. Navigation in this scene follows its flat floor.
+
+Controls: select A/B/C, send an impulse, observe reaction and memory meters. Space uses the selected target. The strength slider now scales the actual impulse (including zero); benchmark capture fixes target A, strength 1 and emission off. Reset clears activity and connection history. The landscape retains its existing coefficients and spatial pulse, with slider scaling added.
+
+Validation: 12 Node tests pass, and authored JavaScript passes syntax checking. Tests cover a silent idle state, injection into only the selected body, ordered threshold arrival A/B/C, growth and decay of the connection driver, slower memory relaxation in C, repeated maximum-strength pulses, full reset, both scene constructions and previous navigation regressions. These are numerical/scene tests, not evidence of rendered neck topology or GPU shader compilation.
+
+Automatic graphical inspection was attempted using the user's existing Chrome project window. Computer Use stopped because it could not confidently identify the current browser URL. No further browser automation was attempted. Version 0.8 still needs visual confirmation of silhouette transitions, depth integration, proxy bounds and the no-emission appearance. Implicit shadows remain unimplemented.
+
+The user's newer 0.7.1 screenshot shows a completed landscape capture at 2560×940 drawing-buffer resolution, pixel ratio 1, around 179.98 FPS and approximately 5.56 ms mean / 5.7 ms p99. That result describes 0.7.1 and this viewport, not 0.8 or a full 2560×1440 render.
+
 ## Desktop-only update 0.7.1
 
 The user selected PC-only development on 2026-11-27. Touch controls, joystick and the mobile rendering profile are removed from the current application. Archived 0.1–0.6 stay unchanged. Current desktop rendering uses native device pixel ratio, with 80 steps in the form lab and 64 in landscape. Mouse drag is the supported fallback for embedded browsers that deny Pointer Lock.
